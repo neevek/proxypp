@@ -72,7 +72,7 @@ namespace sockspp {
     }
     auto version = *buf;
     auto cmd     = *(buf + 1);
-    auto rsv     = *(buf + 2);
+    //auto rsv     = *(buf + 2);
     auto atyp    = *(buf + 3);
 
     if (version != VERSION) {
