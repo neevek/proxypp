@@ -7,39 +7,50 @@
 #include "socks_server.h"
 
 namespace sockspp {
-  SocksServer::SocksServer() :
-    bufferPool_(std::make_shared<BufferPool>(300, 60)) {
+
+  SocksServer::SocksServer(const std::string &addr, Port port, int backlog) :
+    addr_(addr), port_(port), backlog_(backlog) {
   }
 
-  bool SocksServer::start(
-    const std::shared_ptr<uvcpp::Loop> &loop,
-    const std::string &host,
-    Port port,
-    int backlog) {
-
+  bool SocksServer::start(const std::shared_ptr<uvcpp::Loop> &loop) {
     if (server_) {
       LOG_E("SocksServer already started");
       return false;
     }
 
+    bufferPool_ = std::make_shared<BufferPool>(300, 60);
     server_ = uvcpp::Tcp::createUnique(loop);
     if (server_) {
-      server_->on<uvcpp::EvError>([host, port](const auto &e, auto &server) {
-        LOG_E("SocksServer failed to bind on %s:%d", host.c_str(), port);
+      server_->on<uvcpp::EvError>([this](const auto &e, auto &server) {
+        LOG_E("SocksServer failed to bind on %s:%d", addr_.c_str(), port_);
+        if (this->eventCallback_) {
+          this->eventCallback_(
+            ServerStatus::ERROR_OCCURRED, std::string{uv_strerror(e.status)});
+        }
       });
-      server_->on<uvcpp::EvClose>([host, port](const auto &e, auto &server) {
-        LOG_D("SocksServer [%s:%d] closed", host.c_str(), port);
+      server_->on<uvcpp::EvClose>([this](const auto &e, auto &server) {
+        LOG_D("SocksServer [%s:%d] closed", addr_.c_str(), port_);
+        if (this->eventCallback_) {
+          this->eventCallback_(ServerStatus::SHUTDOWN, "SocksServer shutdown");
+        }
       });
-      server_->on<uvcpp::EvBind>([host, port, backlog](const auto &e, auto &server) {
-        LOG_I("SocksServer bound on %s:%d", host.c_str(), port);
-        server.listen(backlog);
+      server_->on<uvcpp::EvBind>(
+        [this](const auto &e, auto &server) {
+        LOG_I("SocksServer bound on %s:%d", addr_.c_str(), port_);
+        server.listen(backlog_);
+
+        if (this->eventCallback_) {
+          this->eventCallback_(
+            ServerStatus::STARTED,
+            "SocksServer bound on " + addr_ + ":" + std::to_string(port_));
+        }
       });
       server_->on<uvcpp::EvAccept<uvcpp::Tcp>>([this](const auto &e, auto &server) {
         this->onClientConnected(
           std::move(const_cast<uvcpp::EvAccept<uvcpp::Tcp> &>(e).client));
       });
 
-      return server_->bind(host, port);
+      return server_->bind(addr_, port_);
     }
     return false;
   }
@@ -58,6 +69,14 @@ namespace sockspp {
     if (server_) {
       server_->close();
     }
+  }
+
+  bool SocksServer::isRunning() const {
+    return server_ && server_->isValid();
+  }
+
+  void SocksServer::setEventCallback(ServerEventCallback &&callback) {
+    eventCallback_ = callback;
   }
   
 } /* end of namspace: sockspp */
