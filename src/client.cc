@@ -222,4 +222,8 @@ namespace sockspp {
     buffer->assign(SOCKS_ERROR_REPLY("\1"), SOCKS_ERROR_REPLY_LENGTH);
     downstreamConn_->writeAsync(std::move(buffer));
   }
+
+  void Client::close() {
+    downstreamConn_->close();
+  }
 } /* end of namspace: sockspp */

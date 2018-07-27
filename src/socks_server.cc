@@ -56,19 +56,34 @@ namespace sockspp {
   }
 
   void SocksServer::onClientConnected(std::unique_ptr<uvcpp::Tcp> conn) {
-    ++clientCount_;
-    conn->on<uvcpp::EvClose>([this](const auto &e, auto &conn) {
-      --clientCount_;
+    auto clientId = getNextClientId();
+    conn->on<uvcpp::EvClose>([this, clientId](const auto &e, auto &conn) {
+      removeClient(clientId);
     });
 
-    std::make_shared<Client>(std::move(conn), bufferPool_)->start();
-    LOG_D("Client count: %d", clientCount_);
+    auto client = std::make_shared<Client>(std::move(conn), bufferPool_);
+    clients_[clientId] = client;
+    client->start();
+
+    LOG_D("Client count: %zu", clients_.size());
   }
 
   void SocksServer::shutdown() {
     if (server_) {
-      server_->close();
+      // must shutdown the Server from inside the loop
+      auto work = uvcpp::Work::createShared(server_->getLoop());
+      work->ref(work);
+      work->once<uvcpp::EvWork>([this](const auto &e, auto &work) {
+        server_->close();
+        work.unrefAll();
+      });
+      work->start();
     }
+
+    for (auto &it : clients_) {
+      it.second->close();
+    }
+    clients_.clear();
   }
 
   bool SocksServer::isRunning() const {
@@ -77,6 +92,18 @@ namespace sockspp {
 
   void SocksServer::setEventCallback(ServerEventCallback &&callback) {
     eventCallback_ = callback;
+  }
+
+  void SocksServer::removeClient(Client::Id clientId) {
+    auto clientIt = clients_.find(clientId);
+    if (clientIt != clients_.end()) {
+      auto client = std::move(clientIt->second);
+      clients_.erase(clientIt);
+    }
+  }
+
+  Client::Id SocksServer::getNextClientId() {
+    return ++clientId_;
   }
   
 } /* end of namspace: sockspp */

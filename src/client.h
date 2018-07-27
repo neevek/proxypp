@@ -16,9 +16,12 @@ namespace sockspp {
    */
   class Client : public std::enable_shared_from_this<Client> {
     public:
+      using Id = uint32_t;
+
       Client(std::unique_ptr<uvcpp::Tcp> &&conn,
              const std::shared_ptr<BufferPool> &bufferPool);
       void start();
+      void close();
 
     private:
       void replySocksError();

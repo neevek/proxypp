@@ -9,6 +9,7 @@
 #include "uvcpp.h"
 #include "client.h"
 #include "buffer_pool.h"
+#include <map>
 
 namespace sockspp {
 
@@ -32,6 +33,8 @@ namespace sockspp {
 
     private:
       void onClientConnected(std::unique_ptr<uvcpp::Tcp> conn);
+      void removeClient(Client::Id clientId);
+      Client::Id getNextClientId();
     
     private:
       std::string addr_;
@@ -39,8 +42,9 @@ namespace sockspp {
       int backlog_;
       std::unique_ptr<uvcpp::Tcp> server_{nullptr};
       std::shared_ptr<BufferPool> bufferPool_{nullptr};
+      std::map<Client::Id, std::shared_ptr<Client>> clients_;
       ServerEventCallback eventCallback_{nullptr};
-      uint32_t clientCount_{0};
+      Client::Id clientId_{0};
   };
   
 } /* end of namspace: spp */
