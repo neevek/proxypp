@@ -16,8 +16,10 @@ endif()
 
 if(NOT BUILD_RELEASE)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLOG_VERBOSE -g")
+  set(CMAKE_C_FLAGS "-Wall -g")
 else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLOG_DEBUG -O3")
+  set(CMAKE_C_FLAGS "-Wall -03")
 endif()
 
 find_package(Threads REQUIRED)

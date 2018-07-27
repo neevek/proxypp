@@ -9,7 +9,6 @@
 #include "uvcpp.h"
 #include "client.h"
 #include "buffer_pool.h"
-#include <map>
 
 namespace sockspp {
 
@@ -26,16 +25,12 @@ namespace sockspp {
 
     private:
       void onClientConnected(std::unique_ptr<uvcpp::Tcp> conn);
-      std::unique_ptr<Client> removeClient(Client::Id clientId);
-
-      Client::Id getNextClientId();
     
     private:
       std::unique_ptr<uvcpp::Tcp> server_{nullptr};
-      std::map<Client::Id, std::unique_ptr<Client>> clients_;
       std::shared_ptr<BufferPool> bufferPool_{nullptr};
 
-      Client::Id clientId_{0};
+      uint32_t clientCount_{0};
   };
   
 } /* end of namspace: spp */

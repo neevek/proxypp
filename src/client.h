@@ -11,15 +11,14 @@
 #include "buffer_pool.h"
 
 namespace sockspp {
-  class Client {
+  /**
+   * This class MUST be used with std::shared_ptr
+   */
+  class Client : public std::enable_shared_from_this<Client> {
     public:
-      using Id = uint32_t;
-
-      Client(Id id, std::unique_ptr<uvcpp::Tcp> &&conn,
+      Client(std::unique_ptr<uvcpp::Tcp> &&conn,
              const std::shared_ptr<BufferPool> &bufferPool);
-
       void start();
-      Id getId() const;
 
     private:
       void replySocksError();
@@ -29,9 +28,8 @@ namespace sockspp {
       void createUpstreamConnection();
     
     private:
-      Id id_{0};
       std::unique_ptr<uvcpp::Tcp> downstreamConn_{nullptr};
-      std::unique_ptr<uvcpp::Tcp> upstreamConn_{nullptr};
+      std::shared_ptr<uvcpp::Tcp> upstreamConn_{nullptr};
       std::unique_ptr<uvcpp::DNSRequest> dnsRequest_{nullptr};
       uvcpp::EvDNSResult::DNSResultVector ipAddrs_;
       decltype(ipAddrs_.begin()) ipIt_{ipAddrs_.end()};

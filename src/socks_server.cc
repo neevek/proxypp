@@ -45,35 +45,19 @@ namespace sockspp {
   }
 
   void SocksServer::onClientConnected(std::unique_ptr<uvcpp::Tcp> conn) {
-    auto clientId = this->getNextClientId();
-    conn->on<uvcpp::EvClose>([this, clientId](const auto &e, auto &conn) {
-      removeClient(clientId);
+    ++clientCount_;
+    conn->on<uvcpp::EvClose>([this](const auto &e, auto &conn) {
+      --clientCount_;
     });
 
-    auto client = std::make_unique<Client>(clientId, std::move(conn), bufferPool_);
-    client->start();
-
-    clients_[clientId] = std::move(client);
-  }
-
-  std::unique_ptr<Client> SocksServer::removeClient(Client::Id clientId) {
-    auto clientIt = clients_.find(clientId);
-    if (clientIt != clients_.end()) {
-      auto client = std::move(clientIt->second);
-      clients_.erase(clientIt);
-      return client;
-    }
-    return nullptr;
+    std::make_shared<Client>(std::move(conn), bufferPool_)->start();
+    LOG_D("Client count: %d", clientCount_);
   }
 
   void SocksServer::shutdown() {
     if (server_) {
       server_->close();
     }
-  }
-
-  Client::Id SocksServer::getNextClientId() {
-    return ++clientId_;
   }
   
 } /* end of namspace: sockspp */

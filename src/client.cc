@@ -14,15 +14,23 @@ namespace {
 }
 
 namespace sockspp {
-  Client::Client(Client::Id id, std::unique_ptr<uvcpp::Tcp> &&conn,
+  Client::Client(std::unique_ptr<uvcpp::Tcp> &&conn,
                  const std::shared_ptr<BufferPool> &bufferPool) :
-    id_(id), downstreamConn_(std::move(conn)), bufferPool_(bufferPool) {
+    downstreamConn_(std::move(conn)), bufferPool_(bufferPool) {
   }
 
   void Client::start() {
-    downstreamConn_->once<uvcpp::EvClose>([this](const auto &e, auto &client){
+    downstreamConn_->once<uvcpp::EvClose>(
+      // intentionally cycle-ref the Client object to avoid
+      // deletion of it before this callback is fired
+      [this, _ = shared_from_this()](const auto &e, auto &client){
+
+      ipIt_ = ipAddrs_.end();
       if (upstreamConn_) {
         upstreamConn_->close();
+      }
+      if (dnsRequest_) {
+        dnsRequest_->cancel();
       }
     });
     downstreamConn_->on<uvcpp::EvBufferRecycled>([this](const auto &e, auto &conn) {
@@ -83,12 +91,21 @@ namespace sockspp {
 
     } else {
       dnsRequest_ = uvcpp::DNSRequest::createUnique(downstreamConn_->getLoop());
+      dnsRequest_->once<uvcpp::EvDNSRequestFinish>(
+        // intentionally cycle-ref the Client object to avoid
+        // deletion of it before this callback is fired
+        [this, _ = shared_from_this()](const auto &e, auto &req){
+          dnsRequest_ = nullptr;
+      });
+
       dnsRequest_->once<uvcpp::EvError>([this](const auto &e, auto &r) {
         LOG_W("Failed to resolve address: %s", socks_.getAddress().c_str());
         this->replySocksError();
         downstreamConn_->close();
       });
-      dnsRequest_->once<uvcpp::EvDNSResult>([this](const auto &e, auto &req) {
+
+      dnsRequest_->once<uvcpp::EvDNSResult>(
+        [this](const auto &e, auto &req) {
         if (e.dnsResults.empty()) {
           LOG_W("[%s] resolved to zero IPs", socks_.getAddress().c_str());
           this->replySocksError();
@@ -100,10 +117,11 @@ namespace sockspp {
         ipIt_ = ipAddrs_.begin();
         auto newIp = *ipIt_;
         ++ipIt_;
+
         this->connectUpstream(newIp);
       });
-      dnsRequest_->resolve(socks_.getAddress());
 
+      dnsRequest_->resolve(socks_.getAddress());
       LOG_D("Resolving address: %s", socks_.getAddress().c_str());
     }
   }
@@ -111,34 +129,16 @@ namespace sockspp {
   void Client::connectUpstream(uvcpp::SockAddr *sockAddr) {
     createUpstreamConnection();
     if (!upstreamConn_->connect(sockAddr)) {
-      replySocksError();
-
       upstreamConn_->close();
+      replySocksError();
     }
   }
 
   void Client::connectUpstream(const std::string &ip) {
     createUpstreamConnection();
-
-    upstreamConn_->once<uvcpp::EvError>(
-      [this, ip](const auto &e, auto &client) {
-
-        if (ipIt_ != ipAddrs_.end()) {
-          upstreamConn_->once<uvcpp::EvClose>(
-            [this](const auto &e, auto &client) {
-              auto newIp = *ipIt_;
-              ++ipIt_;
-              this->connectUpstream(newIp);
-            });
-
-        } else {
-          LOG_E("Failed to connect to address: %s", ip.c_str());
-          this->replySocksError();
-        }
-      });
-
     if (!upstreamConn_->connect(ip, ntohs(socks_.getPort()))) {
       upstreamConn_->close();
+      // check if there're more IPs to try
       if (ipIt_ == ipAddrs_.end()) {
         replySocksError();
       }
@@ -146,9 +146,25 @@ namespace sockspp {
   }
 
   void Client::createUpstreamConnection() {
-    upstreamConn_ = uvcpp::Tcp::createUnique(downstreamConn_->getLoop());
-    upstreamConn_->once<uvcpp::EvClose>([this](const auto &e, auto &client){
-      if (ipIt_ == ipAddrs_.end()) {
+    upstreamConn_ = uvcpp::Tcp::createShared(downstreamConn_->getLoop());
+    upstreamConn_->once<uvcpp::EvError>(
+      [this](const auto &e, auto &client) {
+        if (!upstreamConnected_) {
+          LOG_E("Failed to connect to: %s:%d",
+                client.getIP().c_str(), client.getPort());
+          this->replySocksError();
+        }
+      });
+    upstreamConn_->once<uvcpp::EvClose>(
+      // intentionally cycle-ref the Client object to avoid
+      // deletion of it before this callback is fired
+      [this, _ = shared_from_this()](const auto &e, auto &client){
+      if (!upstreamConnected_ && ipIt_ != ipAddrs_.end()) {
+        auto newIp = *ipIt_;
+        ++ipIt_;
+        this->connectUpstream(newIp);
+
+      } else {
         downstreamConn_->close();
       }
     });
@@ -205,9 +221,5 @@ namespace sockspp {
     auto buffer = bufferPool_->requestBuffer(SOCKS_ERROR_REPLY_LENGTH);
     buffer->assign(SOCKS_ERROR_REPLY("\1"), SOCKS_ERROR_REPLY_LENGTH);
     downstreamConn_->writeAsync(std::move(buffer));
-  }
-
-  Client::Id Client::getId() const {
-    return id_;
   }
 } /* end of namspace: sockspp */
