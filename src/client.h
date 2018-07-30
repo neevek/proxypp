@@ -8,7 +8,7 @@
 #define CLIENT_H_
 #include "uvcpp.h"
 #include "socks.h"
-#include "buffer_pool.h"
+#include "nul/buffer_pool.hpp"
 
 namespace sockspp {
   /**
@@ -19,7 +19,7 @@ namespace sockspp {
       using Id = uint32_t;
 
       Client(std::unique_ptr<uvcpp::Tcp> &&conn,
-             const std::shared_ptr<BufferPool> &bufferPool);
+             const std::shared_ptr<nul::BufferPool> &bufferPool);
       void start();
       void close();
 
@@ -38,7 +38,7 @@ namespace sockspp {
       decltype(ipAddrs_.begin()) ipIt_{ipAddrs_.end()};
       bool upstreamConnected_{false};
 
-      std::shared_ptr<BufferPool> bufferPool_;
+      std::shared_ptr<nul::BufferPool> bufferPool_;
 
       Socks socks_;
   };

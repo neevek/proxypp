@@ -5,7 +5,7 @@
 **   Description: see the header file 
 *******************************************************************************/
 #include "socks.h"
-#include "log/log.h"
+#include "nul/log.hpp"
 
 namespace {
   const static auto VERSION = 0x05;

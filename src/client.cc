@@ -15,7 +15,7 @@ namespace {
 
 namespace sockspp {
   Client::Client(std::unique_ptr<uvcpp::Tcp> &&conn,
-                 const std::shared_ptr<BufferPool> &bufferPool) :
+                 const std::shared_ptr<nul::BufferPool> &bufferPool) :
     downstreamConn_(std::move(conn)), bufferPool_(bufferPool) {
   }
 
@@ -34,7 +34,7 @@ namespace sockspp {
       }
     });
     downstreamConn_->on<uvcpp::EvBufferRecycled>([this](const auto &e, auto &conn) {
-      bufferPool_->returnBuffer(std::forward<std::unique_ptr<uvcpp::Buffer>>(
+      bufferPool_->returnBuffer(std::forward<std::unique_ptr<nul::Buffer>>(
           const_cast<uvcpp::EvBufferRecycled &>(e).buffer));
     });
     downstreamConn_->on<uvcpp::EvRead>(
@@ -205,7 +205,7 @@ namespace sockspp {
         downstreamConn_->writeAsync(std::move(buffer));
 
         upstreamConn_->on<uvcpp::EvBufferRecycled>([this](const auto &e, auto &conn) {
-          bufferPool_->returnBuffer(std::forward<std::unique_ptr<uvcpp::Buffer>>(
+          bufferPool_->returnBuffer(std::forward<std::unique_ptr<nul::Buffer>>(
               const_cast<uvcpp::EvBufferRecycled &>(e).buffer));
         });
         upstreamConn_->on<uvcpp::EvRead>([this](const auto &e, auto &client){

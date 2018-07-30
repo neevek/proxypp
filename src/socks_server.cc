@@ -18,7 +18,7 @@ namespace sockspp {
       return false;
     }
 
-    bufferPool_ = std::make_shared<BufferPool>(300, 60);
+    bufferPool_ = std::make_shared<nul::BufferPool>(300, 60);
     server_ = uvcpp::Tcp::createUnique(loop);
     if (server_) {
       server_->on<uvcpp::EvError>([this](const auto &e, auto &server) {

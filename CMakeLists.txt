@@ -39,6 +39,7 @@ ExternalProject_Add(uvcpp
 
 ExternalProject_Get_Property(uvcpp SOURCE_DIR)
 set(UVCPP_INCLUDE_DIR ${SOURCE_DIR}/src)
+set(NUL_INCLUDE_DIR ${SOURCE_DIR}/../uvcpp-build/nul-prefix/src/nul/src)
 set(UV_INCLUDE_DIR ${SOURCE_DIR}/../uvcpp-build/libuv-prefix/src/libuv/include)
 set(UV_LIBRARY_DIR ${SOURCE_DIR}/../uvcpp-build/libuv-prefix/src/libuv/.libs)
 add_library(uv IMPORTED STATIC GLOBAL)
@@ -47,6 +48,7 @@ set_target_properties(uv PROPERTIES IMPORTED_LOCATION "${UV_LIBRARY_DIR}/libuv.a
 
 include_directories(
   ${UVCPP_INCLUDE_DIR}
+  ${NUL_INCLUDE_DIR}
   ${UV_INCLUDE_DIR}
   ) 
 
@@ -59,7 +61,6 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 endif()
 
 set(SRCS
-  src/buffer_pool.cc
   src/socks_server.cc
   src/client.cc
   src/socks.cc

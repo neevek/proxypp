@@ -1,4 +1,5 @@
 -I../build/deps/src/uvcpp/src
 -I../build/deps/src/uvcpp-build/libuv-prefix/src/libuv/include
+-I../build/deps/src/uvcpp-build/nul-prefix/src/nul/src
 -I.
 

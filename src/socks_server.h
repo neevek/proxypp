@@ -8,7 +8,7 @@
 #define SOCKS_SERVER_H_
 #include "uvcpp.h"
 #include "client.h"
-#include "buffer_pool.h"
+#include "nul/buffer_pool.hpp"
 #include <map>
 
 namespace sockspp {
@@ -41,7 +41,7 @@ namespace sockspp {
       Port port_;
       int backlog_;
       std::unique_ptr<uvcpp::Tcp> server_{nullptr};
-      std::shared_ptr<BufferPool> bufferPool_{nullptr};
+      std::shared_ptr<nul::BufferPool> bufferPool_{nullptr};
       std::map<Client::Id, std::shared_ptr<Client>> clients_;
       ServerEventCallback eventCallback_{nullptr};
       Client::Id clientId_{0};
