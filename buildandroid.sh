@@ -35,7 +35,10 @@ function build {
     -DCMAKE_CROSSCOMPILING=TRUE \
     -DBUILD_RELEASE=TRUE \
     ..
-  make -j8
+
+  NPROCESSORS=$(getconf NPROCESSORS_ONLN 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null)
+  PROCESSORS=${NPROCESSORS:-1}
+  make -j${PROCESSORS}
 }
 
 cd build && rm -rf * && build
