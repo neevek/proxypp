@@ -27,6 +27,8 @@ namespace sockspp {
       bool isRunning();
 
       void setEventCallback(EventCallback &&callback);
+      void setUsername(const std::string &username);
+      void setPassword(const std::string &password);
     
     private:
       void *server_{nullptr};

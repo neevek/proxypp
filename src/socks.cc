@@ -31,9 +31,8 @@ namespace sockspp {
       case State::METHOD_IDENTIFICATION:
         return identifyMethod(buf, len);
 
-      case State::AUTHENTICATION_NEGOTIATION:
-        // will not reach here
-        break;
+      case State::USERNAME_PASSWORD:
+        return extractUsernamePassword(buf, len);
 
       case State::PARSING_REQUEST:
         return parseRequest(buf, len);
@@ -56,13 +55,59 @@ namespace sockspp {
     }
     buf += 2;
     for (std::size_t i = 0; i < count; ++i) {
-      if (*(buf + i) == static_cast<int>(Method::NO_AUTHENTICATION)) {
-        state_ = State::PARSING_REQUEST;
+      auto authMethod = static_cast<Method>(*(buf + i));
+      if (authMethod == requireAuthMethod_) {
+        state_ = authMethod == Method::NO_AUTHENTICATION ?
+          State::PARSING_REQUEST :
+          State::USERNAME_PASSWORD;
+
         return ReplyField::SUCCEEDED;
       }
     }
-    SOCKS_ERROR(ReplyField::GENERAL_SOCKS_SERVER_FAILURE,
-                "sockspp only supports NO_AUTHENTICATION");
+
+    if (requireAuthMethod_ == Method::USERNAME_PASSWORD) {
+      SOCKS_ERROR(ReplyField::GENERAL_SOCKS_SERVER_FAILURE,
+                  "Username/Password authenticat is required");
+    } else {
+      SOCKS_ERROR(ReplyField::GENERAL_SOCKS_SERVER_FAILURE,
+                  "NO_AUTHENTICATION is needed");
+    }
+  }
+
+  Socks::ReplyField Socks::extractUsernamePassword(
+    const char *buf, std::size_t len) {
+    if (len < 3) {
+      // simply return SUCCEEDED but do not parse username and password,
+      // so later authentication will certainly fail
+      return ReplyField::SUCCEEDED;
+    }
+    //auto subVersion = *buf;
+    buf += 1;
+    len -= 1;
+
+    std::size_t usernameLen = *buf;
+    buf += 1;
+    len -= 1;
+    if (usernameLen >= len) {
+      // invalid username length, return SUCCEEDED but do not parse username,
+      // later authentication will fail
+      return ReplyField::SUCCEEDED;
+    }
+    parsedUsername_.assign(buf, usernameLen);
+    buf += usernameLen;
+    len -= usernameLen;
+
+    std::size_t passwordLen = *buf;
+    buf += 1;
+    len -= 1;
+    if (passwordLen != len) {
+      // invalid password length, return SUCCEEDED but do not parse password,
+      // later authentication will fail
+      return ReplyField::SUCCEEDED;
+    }
+
+    parsedPassword_.assign(buf, passwordLen);
+    return ReplyField::SUCCEEDED;
   }
 
   Socks::ReplyField Socks::parseRequest(const char *buf, std::size_t len) {
@@ -126,6 +171,10 @@ namespace sockspp {
     return ReplyField::SUCCEEDED;
   }
 
+  void Socks::setState(Socks::State state) {
+    state_ = state;
+  }
+
   Socks::State Socks::getState() const {
     return state_;
   }
@@ -140,6 +189,18 @@ namespace sockspp {
 
   uint16_t Socks::getPort() const {
     return port_;
+  }
+
+  void Socks::setRequireAuthMethod(Method method) {
+    requireAuthMethod_ = method;
+  }
+
+  std::string Socks::getParsedUsername() const {
+    return parsedUsername_;
+  }
+
+  std::string Socks::getParsedPassword() const {
+    return parsedPassword_;
   }
 
 } /* end of namspace: sockspp */

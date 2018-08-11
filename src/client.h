@@ -22,6 +22,8 @@ namespace sockspp {
              const std::shared_ptr<nul::BufferPool> &bufferPool);
       void start();
       void close();
+      void setUsername(const std::string &username);
+      void setPassword(const std::string &password);
 
     private:
       void replySocksError();
@@ -41,6 +43,8 @@ namespace sockspp {
       std::shared_ptr<nul::BufferPool> bufferPool_;
 
       Socks socks_;
+      std::string username_;
+      std::string password_;
   };
 } /* end of namspace: sockspp */
 

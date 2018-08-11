@@ -7,6 +7,7 @@
 #include "client.h"
 #include <algorithm>
 #include <cstring>
+#include "nul/log.hpp"
 
 namespace {
   #define SOCKS_ERROR_REPLY(replyField) "\5" replyField "\0\1\0\0\0\0\0\0"
@@ -58,9 +59,28 @@ namespace sockspp {
         }
 
         if (state == Socks::State::METHOD_IDENTIFICATION)  {
+          auto shouldUseUsernamePasswordAuth =
+            !username_.empty() || !password_.empty();
+
           auto buffer = bufferPool_->requestBuffer(2);
-          buffer->assign("\5\0", 2);
+          buffer->assign(shouldUseUsernamePasswordAuth ?  "\5\2" : "\5\0", 2);
           conn.writeAsync(std::move(buffer));
+
+        } else if (state == Socks::State::USERNAME_PASSWORD)  {
+          auto isCorrect = username_ == socks_.getParsedUsername() &&
+            password_ == socks_.getParsedPassword();
+
+          auto buffer = bufferPool_->requestBuffer(2);
+          buffer->assign(isCorrect ? "\1\0" : "\1\1", 2);
+          conn.writeAsync(std::move(buffer));
+
+          if (!isCorrect) {
+            LOG_E("username/password don't match");
+            conn.close();
+
+          } else {
+            socks_.setState(Socks::State::PARSING_REQUEST);
+          }
 
         } else if (state == Socks::State::PARSING_REQUEST)  {
           this->connectUpstream();
@@ -68,6 +88,11 @@ namespace sockspp {
         }
       }
     });
+
+    if (!username_.empty() || !password_.empty()) {
+      socks_.setRequireAuthMethod(Socks::Method::USERNAME_PASSWORD);
+    }
+
     downstreamConn_->readStart();
   }
 
@@ -225,5 +250,13 @@ namespace sockspp {
 
   void Client::close() {
     downstreamConn_->close();
+  }
+
+  void Client::setUsername(const std::string &username) {
+    username_ = username;
+  }
+
+  void Client::setPassword(const std::string &password) {
+    password_ = password;
   }
 } /* end of namspace: sockspp */

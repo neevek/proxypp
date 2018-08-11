@@ -43,22 +43,28 @@ namespace sockspp {
       };
 
       enum class State {
-        METHOD_IDENTIFICATION      = 0,
-        AUTHENTICATION_NEGOTIATION = 1,
-        PARSING_REQUEST            = 2,
-        NEGOTIATION_COMPLETE       = 3,
-        ERROR                      = 4,
+        METHOD_IDENTIFICATION         = 0,
+        USERNAME_PASSWORD = 1,
+        PARSING_REQUEST               = 2,
+        NEGOTIATION_COMPLETE          = 3,
+        ERROR                         = 4,
       };
 
       ReplyField parse(const char *buf, std::size_t len);
+      void setState(State state);
       State getState() const;
       AddressType getAddressType() const;
       std::string getAddress() const;
       uint16_t getPort() const;
 
+      void setRequireAuthMethod(Method method);
+      std::string getParsedUsername() const;
+      std::string getParsedPassword() const;
+
     private:
       ReplyField identifyMethod(const char *buf, std::size_t len);
       ReplyField parseRequest(const char *buf, std::size_t len);
+      ReplyField extractUsernamePassword(const char *buf, std::size_t len);
     
     private:
       State state_{State::METHOD_IDENTIFICATION};
@@ -66,6 +72,10 @@ namespace sockspp {
       AddressType atyp_{AddressType::UNKNOWN};
       std::string addr_;
       uint16_t port_{0};
+
+      Method requireAuthMethod_{Method::NO_AUTHENTICATION};
+      std::string parsedUsername_;
+      std::string parsedPassword_;
   };
 } /* end of namspace: sockspp */
 

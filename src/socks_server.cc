@@ -62,6 +62,8 @@ namespace sockspp {
     });
 
     auto client = std::make_shared<Client>(std::move(conn), bufferPool_);
+    client->setUsername(username_);
+    client->setPassword(password_);
     clients_[clientId] = client;
     client->start();
 
@@ -92,6 +94,14 @@ namespace sockspp {
 
   void SocksServer::setEventCallback(ServerEventCallback &&callback) {
     eventCallback_ = callback;
+  }
+
+  void SocksServer::setUsername(const std::string &username) {
+    username_ = username;
+  }
+
+  void SocksServer::setPassword(const std::string &password) {
+    password_ = password;
   }
 
   void SocksServer::removeClient(Client::Id clientId) {

@@ -30,6 +30,8 @@ namespace sockspp {
       void shutdown();
       bool isRunning() const;
       void setEventCallback(ServerEventCallback &&callback);
+      void setUsername(const std::string &username);
+      void setPassword(const std::string &password);
 
     private:
       void onClientConnected(std::unique_ptr<uvcpp::Tcp> conn);
@@ -45,6 +47,9 @@ namespace sockspp {
       std::map<Client::Id, std::shared_ptr<Client>> clients_;
       ServerEventCallback eventCallback_{nullptr};
       Client::Id clientId_{0};
+
+      std::string username_;
+      std::string password_;
   };
   
 } /* end of namspace: spp */

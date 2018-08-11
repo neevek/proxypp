@@ -49,6 +49,18 @@ namespace sockspp {
       });
     }
   }
+
+  void Sockspp::setUsername(const std::string &username) {
+    if (server_) {
+      reinterpret_cast<SocksServer *>(server_)->setUsername(username);
+    }
+  }
+
+  void Sockspp::setPassword(const std::string &password) {
+    if (server_) {
+      reinterpret_cast<SocksServer *>(server_)->setPassword(password);
+    }
+  }
   
 } /* end of namspace: sockspp */
 
@@ -56,6 +68,8 @@ namespace sockspp {
 #ifdef BUILD_CLIENT 
 int main(int argc, const char *argv[]) {
   sockspp::Sockspp s{"0.0.0.0", 9888, 200};
+  s.setUsername("hello");
+  s.setPassword("world");
   s.start();
   return 0;
 }
