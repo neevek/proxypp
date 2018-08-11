@@ -58,7 +58,7 @@ namespace sockspp {
   void SocksServer::onClientConnected(std::unique_ptr<uvcpp::Tcp> conn) {
     auto clientId = getNextClientId();
     conn->on<uvcpp::EvClose>([this, clientId](const auto &e, auto &conn) {
-      removeClient(clientId);
+      this->removeClient(clientId);
     });
 
     auto client = std::make_shared<Client>(std::move(conn), bufferPool_);

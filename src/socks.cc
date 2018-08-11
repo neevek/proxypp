@@ -49,13 +49,13 @@ namespace sockspp {
       SOCKS_ERROR(ReplyField::GENERAL_SOCKS_SERVER_FAILURE,
                   "Bad SOCKS version: %d", *buf);
     }
-    auto count = *(buf + 1);
+    std::size_t count = *(buf + 1);
     if (count != len - 2) {
       SOCKS_ERROR(ReplyField::GENERAL_SOCKS_SERVER_FAILURE,
                   "Bad SOCKS method identification message");
     }
     buf += 2;
-    for (int i = 0; i < count; ++i) {
+    for (std::size_t i = 0; i < count; ++i) {
       if (*(buf + i) == static_cast<int>(Method::NO_AUTHENTICATION)) {
         state_ = State::PARSING_REQUEST;
         return ReplyField::SUCCEEDED;
@@ -106,7 +106,7 @@ namespace sockspp {
         buf += 16;
         break;
       case AddressType::DOMAIN_NAME: {
-        auto addrLen = *buf;
+        std::size_t addrLen = *buf;
         addr_.assign(buf + 1, addrLen);
         if (len != 1 + addrLen + 2) {
           SOCKS_ERROR(ReplyField::GENERAL_SOCKS_SERVER_FAILURE,
