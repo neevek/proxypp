@@ -66,10 +66,28 @@ namespace sockspp {
 
 
 #ifdef BUILD_CLIENT 
-int main(int argc, const char *argv[]) {
-  sockspp::Sockspp s{"0.0.0.0", 9888, 200};
-  s.setUsername("hello");
-  s.setPassword("world");
+#include "cli/cmdline.h"
+
+int main(int argc, char *argv[]) {
+  cmdline::parser p;
+
+  p.add<std::string>("host", 'h', "IPv4 or IPv6 address", false, "0.0.0.0");
+  p.add<uint16_t>(
+    "port", 'p', "port number", true, 0, cmdline::range(1, 65535));
+  p.add<int>("backlog", 'b', "backlog for the server", false, 200, cmdline::range(1, 65535));
+  p.add<std::string>("username", 'U', "username", false);
+  p.add<std::string>("password", 'P', "password", false);
+
+  p.parse_check(argc, argv);
+
+  sockspp::Sockspp s{
+    p.get<std::string>("host"),
+    p.get<uint16_t>("port"),
+    p.get<int>("backlog"),
+  };
+
+  s.setUsername(p.get<std::string>("username"));
+  s.setPassword(p.get<std::string>("password"));
   s.start();
   return 0;
 }
