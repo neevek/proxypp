@@ -1,6 +1,7 @@
 /*
   Copyright (c) 2009, Hideyuki Tanaka
   All rights reserved.
+
   Redistribution and use in source and binary forms, with or without
   modification, are permitted provided that the following conditions are met:
   * Redistributions of source code must retain the above copyright
@@ -11,6 +12,7 @@
   * Neither the name of the <organization> nor the
   names of its contributors may be used to endorse or promote products
   derived from this software without specific prior written permission.
+
   THIS SOFTWARE IS PROVIDED BY <copyright holder> ''AS IS'' AND ANY
   EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
   WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -22,8 +24,6 @@
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
-// https://github.com/tanakh/cmdline
 
 #pragma once
 
@@ -38,6 +38,7 @@
 #include <algorithm>
 #include <cxxabi.h>
 #include <cstdlib>
+#include <initializer_list>
 
 namespace cmdline{
 
@@ -136,8 +137,8 @@ inline std::string readable_typename<std::string>()
 class cmdline_error : public std::exception {
 public:
   cmdline_error(const std::string &msg): msg(msg){}
-  ~cmdline_error() throw() {}
-  const char *what() const throw() { return msg.c_str(); }
+  ~cmdline_error() = default;
+  const char *what() const noexcept { return msg.c_str(); }
 private:
   std::string msg;
 };
@@ -181,136 +182,17 @@ private:
 };
 
 template <class T>
-oneof_reader<T> oneof(T a1)
-{
+oneof_reader<T> oneof(std::initializer_list<T> &&args) {
   oneof_reader<T> ret;
-  ret.add(a1);
+  for (auto &arg : args) {
+    ret.add(arg);
+  }
   return ret;
 }
-
-template <class T>
-oneof_reader<T> oneof(T a1, T a2)
-{
-  oneof_reader<T> ret;
-  ret.add(a1);
-  ret.add(a2);
-  return ret;
-}
-
-template <class T>
-oneof_reader<T> oneof(T a1, T a2, T a3)
-{
-  oneof_reader<T> ret;
-  ret.add(a1);
-  ret.add(a2);
-  ret.add(a3);
-  return ret;
-}
-
-template <class T>
-oneof_reader<T> oneof(T a1, T a2, T a3, T a4)
-{
-  oneof_reader<T> ret;
-  ret.add(a1);
-  ret.add(a2);
-  ret.add(a3);
-  ret.add(a4);
-  return ret;
-}
-
-template <class T>
-oneof_reader<T> oneof(T a1, T a2, T a3, T a4, T a5)
-{
-  oneof_reader<T> ret;
-  ret.add(a1);
-  ret.add(a2);
-  ret.add(a3);
-  ret.add(a4);
-  ret.add(a5);
-  return ret;
-}
-
-template <class T>
-oneof_reader<T> oneof(T a1, T a2, T a3, T a4, T a5, T a6)
-{
-  oneof_reader<T> ret;
-  ret.add(a1);
-  ret.add(a2);
-  ret.add(a3);
-  ret.add(a4);
-  ret.add(a5);
-  ret.add(a6);
-  return ret;
-}
-
-template <class T>
-oneof_reader<T> oneof(T a1, T a2, T a3, T a4, T a5, T a6, T a7)
-{
-  oneof_reader<T> ret;
-  ret.add(a1);
-  ret.add(a2);
-  ret.add(a3);
-  ret.add(a4);
-  ret.add(a5);
-  ret.add(a6);
-  ret.add(a7);
-  return ret;
-}
-
-template <class T>
-oneof_reader<T> oneof(T a1, T a2, T a3, T a4, T a5, T a6, T a7, T a8)
-{
-  oneof_reader<T> ret;
-  ret.add(a1);
-  ret.add(a2);
-  ret.add(a3);
-  ret.add(a4);
-  ret.add(a5);
-  ret.add(a6);
-  ret.add(a7);
-  ret.add(a8);
-  return ret;
-}
-
-template <class T>
-oneof_reader<T> oneof(T a1, T a2, T a3, T a4, T a5, T a6, T a7, T a8, T a9)
-{
-  oneof_reader<T> ret;
-  ret.add(a1);
-  ret.add(a2);
-  ret.add(a3);
-  ret.add(a4);
-  ret.add(a5);
-  ret.add(a6);
-  ret.add(a7);
-  ret.add(a8);
-  ret.add(a9);
-  return ret;
-}
-
-template <class T>
-oneof_reader<T> oneof(T a1, T a2, T a3, T a4, T a5, T a6, T a7, T a8, T a9, T a10)
-{
-  oneof_reader<T> ret;
-  ret.add(a1);
-  ret.add(a2);
-  ret.add(a3);
-  ret.add(a4);
-  ret.add(a5);
-  ret.add(a6);
-  ret.add(a7);
-  ret.add(a8);
-  ret.add(a9);
-  ret.add(a10);
-  return ret;
-}
-
-//-----
 
 class parser{
 public:
-  parser(){
-  }
+  parser() = default;
   ~parser(){
     for (std::map<std::string, option_base*>::iterator p=options.begin();
          p!=options.end(); p++)
@@ -580,12 +462,78 @@ public:
       for (size_t j=ordered[i]->name().length(); j<max_width+4; j++)
         oss<<' ';
 
-      oss<<ordered[i]->description()<<std::endl;
+      auto desc = ordered[i]->description();
+      if (this->wrap_desc) {
+        oss<< std::endl;
+        desc = wrap_str(desc, 10, 10, wrap_desc_at_count);
+        oss<< desc <<std::endl;
+        if (extra_newline_after_desc) {
+          oss<< std::endl;
+        }
+
+      } else {
+        oss<<desc<<std::endl;
+      }
     }
     return oss.str();
   }
 
+  void enable_wrap_desc(int wrap_at_count, bool add_extra_newline) {
+    wrap_desc = true;
+    wrap_desc_at_count = wrap_at_count;
+    extra_newline_after_desc = add_extra_newline;
+  }
+
 private:
+  std::string wrap_str(
+    const std::string &s,
+    int first_line_indent,
+    int indent,
+    int wrap) const {
+
+    std::string result;
+    auto max = wrap - indent;
+    auto len = s.length();
+
+    if (first_line_indent > 0) {
+      result.append(first_line_indent, ' ');
+    }
+
+    std::size_t end = 0;
+    while (true) {
+      auto begin = end;
+      end += max;
+
+      if (end < len) {
+        while (end < len && s[end] != ' ') {
+          --end;
+        }
+        if (end < begin) {
+          end = std::max(len, begin + max);
+        }
+
+      } else {
+        end = len;
+      }
+
+      if (begin < len && s[begin] == ' ') {
+        ++begin;
+      }
+
+      if (result.length() > first_line_indent) {
+        result.append(1, '\n');
+        result.append(indent, ' ');
+      }
+      result.append(s, begin, end - begin);
+
+      if (end == len) {
+        break;
+      }
+    }
+
+    return result;
+  }
+
   void check(int argc, bool ok){
     if ((argc==1 && !ok) || exist("help")){
       std::cerr<<usage();
@@ -802,9 +750,11 @@ private:
 
   std::string prog_name;
   std::vector<std::string> others;
-
   std::vector<std::string> errors;
+
+  bool wrap_desc{false};
+  bool extra_newline_after_desc{false};
+  int wrap_desc_at_count;
 };
 
 } // cmdline
-
