@@ -487,9 +487,9 @@ public:
 private:
   std::string wrap_str(
     const std::string &s,
-    int first_line_indent,
-    int indent,
-    int wrap) const {
+    std::size_t first_line_indent,
+    std::size_t indent,
+    std::size_t wrap) const {
 
     std::string result;
     auto max = wrap - indent;
