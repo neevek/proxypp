@@ -34,23 +34,20 @@ namespace sockspp {
           this->eventCallback_(ServerStatus::SHUTDOWN, "SocksServer shutdown");
         }
       });
-      server_->on<uvcpp::EvBind>(
-        [this](const auto &e, auto &server) {
-        LOG_I("SocksServer bound on %s:%d", addr_.c_str(), port_);
-        server.listen(backlog_);
-
-        if (this->eventCallback_) {
-          this->eventCallback_(
-            ServerStatus::STARTED,
-            "SocksServer bound on " + addr_ + ":" + std::to_string(port_));
-        }
-      });
       server_->on<uvcpp::EvAccept<uvcpp::Tcp>>([this](const auto &e, auto &server) {
         this->onClientConnected(
           std::move(const_cast<uvcpp::EvAccept<uvcpp::Tcp> &>(e).client));
       });
 
-      return server_->bind(addr_, port_);
+      if (server_->bind(addr_, port_) && server_->listen(backlog_)) {
+        LOG_I("SocksServer bound on %s:%d", addr_.c_str(), port_);
+        if (this->eventCallback_) {
+          this->eventCallback_(
+            ServerStatus::STARTED,
+            "SocksServer bound on " + addr_ + ":" + std::to_string(port_));
+        }
+        return true;
+      }
     }
     return false;
   }
