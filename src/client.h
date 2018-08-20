@@ -2,12 +2,12 @@
 **          File: client.h
 **        Author: neevek <i@neevek.net>.
 ** Creation Time: 2018-07-25 Wed 06:03 PM
-**   Description: client wraps the tcp connection to the socks server
+**   Description: client wraps the tcp connection to the SOCKS server
 *******************************************************************************/
 #ifndef CLIENT_H_
 #define CLIENT_H_
 #include "uvcpp.h"
-#include "socks.h"
+#include "socks_req_parser.h"
 #include "nul/buffer_pool.hpp"
 
 namespace sockspp {
@@ -42,7 +42,7 @@ namespace sockspp {
 
       std::shared_ptr<nul::BufferPool> bufferPool_;
 
-      Socks socks_;
+      SocksReqParser socks_;
       std::string username_;
       std::string password_;
   };

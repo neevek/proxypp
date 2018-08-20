@@ -5,9 +5,10 @@
 **   Description: see the header file 
 *******************************************************************************/
 #include "client.h"
+#include "nul/log.hpp"
+
 #include <algorithm>
 #include <cstring>
-#include "nul/log.hpp"
 
 namespace {
   #define SOCKS_ERROR_REPLY(replyField) "\5" replyField "\0\1\0\0\0\0\0\0"
@@ -47,18 +48,18 @@ namespace sockspp {
       }
 
       auto state = socks_.getState();
-      if (state == Socks::State::ERROR) {
+      if (state == SocksReqParser::State::ERROR) {
         // do nothing, shouldn't reach here
 
       } else {
         auto reply = socks_.parse(e.buf, e.nread);
-        if (reply != Socks::ReplyField::SUCCEEDED) {
+        if (reply != SocksReqParser::ReplyField::SUCCEEDED) {
           this->replySocksError();
           conn.close();
           return;
         }
 
-        if (state == Socks::State::METHOD_IDENTIFICATION)  {
+        if (state == SocksReqParser::State::METHOD_IDENTIFICATION)  {
           auto shouldUseUsernamePasswordAuth =
             !username_.empty() || !password_.empty();
 
@@ -66,7 +67,7 @@ namespace sockspp {
           buffer->assign(shouldUseUsernamePasswordAuth ?  "\5\2" : "\5\0", 2);
           conn.writeAsync(std::move(buffer));
 
-        } else if (state == Socks::State::USERNAME_PASSWORD)  {
+        } else if (state == SocksReqParser::State::USERNAME_PASSWORD)  {
           auto isCorrect = username_ == socks_.getParsedUsername() &&
             password_ == socks_.getParsedPassword();
 
@@ -79,10 +80,10 @@ namespace sockspp {
             conn.close();
 
           } else {
-            socks_.setState(Socks::State::PARSING_REQUEST);
+            socks_.setState(SocksReqParser::State::PARSING_REQUEST);
           }
 
-        } else if (state == Socks::State::PARSING_REQUEST)  {
+        } else if (state == SocksReqParser::State::PARSING_REQUEST)  {
           this->connectUpstream();
 
         }

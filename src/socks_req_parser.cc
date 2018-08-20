@@ -1,14 +1,13 @@
 /*******************************************************************************
-**          File: socks.cc
+**          File: socks_req_parser.cc
 **        Author: neevek <i@neevek.net>.
 ** Creation Time: 2018-07-26 Thu 02:22 PM
 **   Description: see the header file 
 *******************************************************************************/
-#include "socks.h"
+#include "socks_req_parser.h"
 #include "nul/log.hpp"
 
 namespace {
-  const static auto VERSION = 0x05;
   #define SOCKS_ERROR(replyField, fmt, ...) \
     state_ = State::ERROR; \
     LOG_E(fmt, ##__VA_ARGS__); \
@@ -17,7 +16,7 @@ namespace {
 
 namespace sockspp {
 
-  Socks::ReplyField Socks::parse(const char *buf, std::size_t len) {
+  SocksReqParser::ReplyField SocksReqParser::parse(const char *buf, std::size_t len) {
     if (state_ > State::PARSING_REQUEST) {
       SOCKS_ERROR(ReplyField::GENERAL_SOCKS_SERVER_FAILURE,
                   "Invalid state: %d", static_cast<int>(state_));
@@ -43,8 +42,8 @@ namespace sockspp {
     return ReplyField::SUCCEEDED;
   }
 
-  Socks::ReplyField Socks::identifyMethod(const char *buf, std::size_t len) {
-    if (*buf != VERSION) {
+  SocksReqParser::ReplyField SocksReqParser::identifyMethod(const char *buf, std::size_t len) {
+    if (*buf != Socks::VERSION) {
       SOCKS_ERROR(ReplyField::GENERAL_SOCKS_SERVER_FAILURE,
                   "Bad SOCKS version: %d", *buf);
     }
@@ -55,9 +54,9 @@ namespace sockspp {
     }
     buf += 2;
     for (std::size_t i = 0; i < count; ++i) {
-      auto authMethod = static_cast<Method>(*(buf + i));
+      auto authMethod = static_cast<Socks::Method>(*(buf + i));
       if (authMethod == requireAuthMethod_) {
-        state_ = authMethod == Method::NO_AUTHENTICATION ?
+        state_ = authMethod == Socks::Method::NO_AUTHENTICATION ?
           State::PARSING_REQUEST :
           State::USERNAME_PASSWORD;
 
@@ -65,7 +64,7 @@ namespace sockspp {
       }
     }
 
-    if (requireAuthMethod_ == Method::USERNAME_PASSWORD) {
+    if (requireAuthMethod_ == Socks::Method::USERNAME_PASSWORD) {
       SOCKS_ERROR(ReplyField::GENERAL_SOCKS_SERVER_FAILURE,
                   "Username/Password authenticat is required");
     } else {
@@ -74,7 +73,7 @@ namespace sockspp {
     }
   }
 
-  Socks::ReplyField Socks::extractUsernamePassword(
+  SocksReqParser::ReplyField SocksReqParser::extractUsernamePassword(
     const char *buf, std::size_t len) {
     if (len < 3) {
       // simply return SUCCEEDED but do not parse username and password,
@@ -110,7 +109,7 @@ namespace sockspp {
     return ReplyField::SUCCEEDED;
   }
 
-  Socks::ReplyField Socks::parseRequest(const char *buf, std::size_t len) {
+  SocksReqParser::ReplyField SocksReqParser::parseRequest(const char *buf, std::size_t len) {
     if (len < 4) {
       SOCKS_ERROR(ReplyField::GENERAL_SOCKS_SERVER_FAILURE,
                   "SOCKS message too short");
@@ -120,12 +119,12 @@ namespace sockspp {
     //auto rsv     = *(buf + 2);
     auto atyp    = *(buf + 3);
 
-    if (version != VERSION) {
+    if (version != Socks::VERSION) {
       SOCKS_ERROR(ReplyField::GENERAL_SOCKS_SERVER_FAILURE,
-                  "SOCKS message too short");
+                  "Invalid SOCKS version: %d", version);
     }
 
-    if (cmd != static_cast<int>(RequestType::CONNECT)) {
+    if (cmd != static_cast<int>(Socks::RequestType::CONNECT)) {
       SOCKS_ERROR(ReplyField::COMMAND_NOT_SUPPORTED,
                   "unsupported command: %d", cmd);
     }
@@ -133,8 +132,8 @@ namespace sockspp {
     buf += 4;
     len -= 4;
 
-    switch(static_cast<AddressType>(atyp)) {
-      case AddressType::IPV4:
+    switch(static_cast<Socks::AddressType>(atyp)) {
+      case Socks::AddressType::IPV4:
         if (len != 4 + 2) {
           SOCKS_ERROR(ReplyField::GENERAL_SOCKS_SERVER_FAILURE,
                       "Incorrect IPV4 address length: %zu", len);
@@ -142,7 +141,7 @@ namespace sockspp {
         addr_.assign(buf, 4);
         buf += 4;
         break;
-      case AddressType::IPV6:
+      case Socks::AddressType::IPV6:
         if (len != 16 + 2) {
           SOCKS_ERROR(ReplyField::GENERAL_SOCKS_SERVER_FAILURE,
                       "Incorrect IPV6 address length: %zu", len);
@@ -150,7 +149,7 @@ namespace sockspp {
         addr_.assign(buf, 16);
         buf += 16;
         break;
-      case AddressType::DOMAIN_NAME: {
+      case Socks::AddressType::DOMAIN_NAME: {
         std::size_t addrLen = *buf;
         addr_.assign(buf + 1, addrLen);
         if (len != 1 + addrLen + 2) {
@@ -165,41 +164,41 @@ namespace sockspp {
                     "unknown atyp: %d", atyp);
     }
 
-    atyp_ = static_cast<AddressType>(atyp);
+    atyp_ = static_cast<Socks::AddressType>(atyp);
     memcpy(&port_, buf, 2);
     state_ = State::NEGOTIATION_COMPLETE;
     return ReplyField::SUCCEEDED;
   }
 
-  void Socks::setState(Socks::State state) {
+  void SocksReqParser::setState(SocksReqParser::State state) {
     state_ = state;
   }
 
-  Socks::State Socks::getState() const {
+  SocksReqParser::State SocksReqParser::getState() const {
     return state_;
   }
 
-  Socks::AddressType Socks::getAddressType() const {
+  Socks::AddressType SocksReqParser::getAddressType() const {
     return atyp_;
   }
 
-  std::string Socks::getAddress() const {
+  std::string SocksReqParser::getAddress() const {
     return addr_;
   }
 
-  uint16_t Socks::getPort() const {
+  uint16_t SocksReqParser::getPort() const {
     return port_;
   }
 
-  void Socks::setRequireAuthMethod(Method method) {
+  void SocksReqParser::setRequireAuthMethod(Socks::Method method) {
     requireAuthMethod_ = method;
   }
 
-  std::string Socks::getParsedUsername() const {
+  std::string SocksReqParser::getParsedUsername() const {
     return parsedUsername_;
   }
 
-  std::string Socks::getParsedPassword() const {
+  std::string SocksReqParser::getParsedPassword() const {
     return parsedPassword_;
   }
 

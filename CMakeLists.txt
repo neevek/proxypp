@@ -63,7 +63,9 @@ endif()
 set(SRCS
   src/socks_server.cc
   src/client.cc
-  src/socks.cc
+  src/socks_req_parser.cc
+  src/socks_resp_parser.cc
+  src/socks_client.cc
   src/sockspp.cc
   )
 
