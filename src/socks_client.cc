@@ -41,6 +41,7 @@ namespace sockspp {
           return;
         }
 
+        state = socks_.getState();
         if (state == SocksRespParser::State::REQUEST) {
           this->sendSocksRequest(targetHost, targetPort);
 
@@ -55,6 +56,9 @@ namespace sockspp {
 
         } else if (state == SocksRespParser::State::NEGOTIATION_COMPLETE) {
           conn_->publish(EvSocksHandshake{true});
+
+        } else {
+
         }
       }
     });
@@ -71,10 +75,12 @@ namespace sockspp {
 
     std::unique_ptr<nul::Buffer> reqBuf = nullptr;
     if (methods == 1) {
-      const char req[] = "\5\1\0";
+      const char req[] = { '\5', '\1', '\0' };
       reqBuf = bufferPool_->assembleDataBuffer(req, sizeof(req));
+
     } else {
-      const char req[] = "\5\2\0\2";  // \2 = username/password auth
+      // \2 = username/password auth
+      const char req[] = { '\5', '\2', '\0', '\2' };
       reqBuf = bufferPool_->assembleDataBuffer(req, sizeof(req));
     }
     conn_->writeAsync(std::move(reqBuf));
@@ -109,12 +115,12 @@ namespace sockspp {
       atyp = Socks::AddressType::DOMAIN_NAME;
     }
 
-    auto reqBuf = std::string{"\5\1\0"};  // send CONNECT request
+    auto reqBuf = std::string{"\5\1\0", 3};  // send CONNECT request
     switch(atyp) {
       case Socks::AddressType::IPV4: {
         auto sa4 = reinterpret_cast<uvcpp::SockAddr4 *>(&sas);
         reqBuf.append(1, '\1');
-        reqBuf.append(reinterpret_cast<char *>(&sa4->sin_addr), 4);
+        reqBuf.append(reinterpret_cast<const char *>(&sa4->sin_addr), 4);
         break;
       }
       case Socks::AddressType::DOMAIN_NAME: {
@@ -126,17 +132,25 @@ namespace sockspp {
       case Socks::AddressType::IPV6: {
         auto sa6 = reinterpret_cast<uvcpp::SockAddr6 *>(&sas);
         reqBuf.append(1, '\4');
-        reqBuf.append(reinterpret_cast<char *>(&sa6->sin6_addr), 16);
+        reqBuf.append(reinterpret_cast<const char *>(&sa6->sin6_addr), 16);
         break;
       }
       default:
         break;
     }
     auto port = htons(targetPort);
-    reqBuf.append(reinterpret_cast<char *>(&port), 2);
+    reqBuf.append(reinterpret_cast<const char *>(&port), 2);
 
     conn_->writeAsync(
       bufferPool_->assembleDataBuffer(reqBuf.c_str(), reqBuf.length()));
+  }
+
+  void SocksClient::setUsername(const std::string &username) {
+    username_ = username;
+  }
+
+  void SocksClient::setPassword(const std::string &password) {
+    password_ = password;
   }
 
 } /* end of namspace: sockapp */

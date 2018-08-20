@@ -45,12 +45,8 @@ namespace sockspp {
           std::forward<uvcpp::EventCallback<E, uvcpp::Tcp>>(callback));
       }
 
-      std::string getIP() const;
-      uint16_t getPort() const;
-      bool isValid() const;
-      void close() const;
-      void readStart() const;
-      bool writeAsync(std::unique_ptr<nul::Buffer> buffer) const;
+      void setUsername(const std::string &username);
+      void setPassword(const std::string &password);
 
     private:
       void sendInitialRequest();

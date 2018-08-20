@@ -29,11 +29,6 @@ namespace sockspp {
       return false;
     }
 
-    if (buf[1] != 0) {
-      LOG_E("SOCKS request failed: %d", buf[1]);
-      return false;
-    }
-
     chosenMethod_ = buf[1];
     if (chosenMethod_ == static_cast<int>(Socks::Method::NO_AUTHENTICATION)) {
       state_ = State::REQUEST;
@@ -49,7 +44,7 @@ namespace sockspp {
 
   bool SocksRespParser::parseAuthResp(const char *buf, std::size_t len) {
     if (len != 2) {
-      LOG_E("Username/Password auth failed");
+      LOG_E("username/password auth failed, len=%zu", len);
       return false;
     }
     if (buf[0] != 0x1) {
@@ -57,9 +52,11 @@ namespace sockspp {
       return false;
     }
     if (buf[1] != 0x0) {
-      LOG_E("Username/Password auth failed: %d", buf[1]);
+      LOG_E("username/password auth failed: %d", buf[1]);
       return false;
     }
+
+    state_ = State::REQUEST;
     return true;
   }
 

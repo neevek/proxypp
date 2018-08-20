@@ -92,4 +92,4 @@ macro(ADD_SOCKSPP_TEST TEST_NAME TEST_SOURCE)
   add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
 endmacro()
 
-ADD_SOCKSPP_TEST(client sockspp/client.cc)
+ADD_SOCKSPP_TEST(client sockspp/test_server_and_client.cc)

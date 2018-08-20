@@ -61,6 +61,7 @@ namespace sockspp {
     auto client = std::make_shared<Client>(std::move(conn), bufferPool_);
     client->setUsername(username_);
     client->setPassword(password_);
+
     clients_[clientId] = client;
     client->start();
 
