@@ -1,0 +1,5 @@
+-I../build/deps/installed/include
+-I../build/deps/src/uvcpp-build/libuv-prefix/src/libuv/include
+-I../../src
+
+
