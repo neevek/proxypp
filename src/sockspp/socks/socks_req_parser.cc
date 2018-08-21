@@ -9,7 +9,7 @@
 
 namespace {
   #define SOCKS_ERROR(replyField, fmt, ...) \
-    state_ = State::ERROR; \
+    state_ = State::ERROR_OCCURRED; \
     LOG_E(fmt, ##__VA_ARGS__); \
     return replyField 
 }
@@ -30,7 +30,7 @@ namespace sockspp {
       case State::METHOD_IDENTIFICATION:
         return identifyMethod(buf, len);
 
-      case State::USERNAME_PASSWORD:
+      case State::USERNAME_PASSWORD_AUTH:
         return extractUsernamePassword(buf, len);
 
       case State::PARSING_REQUEST:
@@ -58,7 +58,7 @@ namespace sockspp {
       if (authMethod == requireAuthMethod_) {
         state_ = authMethod == Socks::Method::NO_AUTHENTICATION ?
           State::PARSING_REQUEST :
-          State::USERNAME_PASSWORD;
+          State::USERNAME_PASSWORD_AUTH;
 
         return ReplyField::SUCCEEDED;
       }

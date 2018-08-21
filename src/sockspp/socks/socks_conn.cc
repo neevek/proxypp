@@ -48,7 +48,7 @@ namespace sockspp {
       }
 
       auto state = socks_.getState();
-      if (state == SocksReqParser::State::ERROR) {
+      if (state == SocksReqParser::State::ERROR_OCCURRED) {
         // do nothing, shouldn't reach here
 
       } else {
@@ -67,7 +67,7 @@ namespace sockspp {
           buffer->assign(shouldUseUsernamePasswordAuth ?  "\5\2" : "\5\0", 2);
           conn.writeAsync(std::move(buffer));
 
-        } else if (state == SocksReqParser::State::USERNAME_PASSWORD)  {
+        } else if (state == SocksReqParser::State::USERNAME_PASSWORD_AUTH)  {
           auto isCorrect = username_ == socks_.getParsedUsername() &&
             password_ == socks_.getParsedPassword();
 

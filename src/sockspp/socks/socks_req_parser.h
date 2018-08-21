@@ -14,10 +14,10 @@ namespace sockspp {
     public:
       enum class State {
         METHOD_IDENTIFICATION         = 0,
-        USERNAME_PASSWORD             = 1,
+        USERNAME_PASSWORD_AUTH        = 1,
         PARSING_REQUEST               = 2,
         NEGOTIATION_COMPLETE          = 3,
-        ERROR                         = 4,
+        ERROR_OCCURRED                = 4,
       };
 
       enum class ReplyField {
