@@ -78,7 +78,7 @@ include_directories(
 set(COMMON_SRCS
   main.cc
   ${SOCKSPP_SRC_DIR}/sockspp/socks/socks_server.cc
-  ${SOCKSPP_SRC_DIR}/sockspp/socks/client.cc
+  ${SOCKSPP_SRC_DIR}/sockspp/socks/socks_conn.cc
   ${SOCKSPP_SRC_DIR}/sockspp/socks/socks_req_parser.cc
   ${SOCKSPP_SRC_DIR}/sockspp/socks/socks_resp_parser.cc
   ${SOCKSPP_SRC_DIR}/sockspp/socks/socks_client.cc

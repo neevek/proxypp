@@ -47,19 +47,19 @@ namespace sockspp {
   }
 
   void SocksServer::onClientConnected(std::unique_ptr<uvcpp::Tcp> conn) {
-    auto clientId = getNextClientId();
-    conn->on<uvcpp::EvClose>([this, clientId](const auto &e, auto &conn) {
-      this->removeClient(clientId);
+    auto connId = getNextConnId();
+    conn->on<uvcpp::EvClose>([this, connId](const auto &e, auto &conn) {
+      this->removeConn(connId);
     });
 
-    auto client = std::make_shared<Client>(std::move(conn), bufferPool_);
+    auto client = std::make_shared<SocksConn>(std::move(conn), bufferPool_);
     client->setUsername(username_);
     client->setPassword(password_);
 
-    clients_[clientId] = client;
+    connections_[connId] = client;
     client->start();
 
-    LOG_D("Client count: %zu", clients_.size());
+    LOG_D("SocksConn count: %zu", connections_.size());
   }
 
   void SocksServer::shutdown() {
@@ -74,10 +74,10 @@ namespace sockspp {
       work->start();
     }
 
-    for (auto &it : clients_) {
+    for (auto &it : connections_) {
       it.second->close();
     }
-    clients_.clear();
+    connections_.clear();
   }
 
   bool SocksServer::isRunning() const {
@@ -96,16 +96,16 @@ namespace sockspp {
     password_ = password;
   }
 
-  void SocksServer::removeClient(Client::Id clientId) {
-    auto clientIt = clients_.find(clientId);
-    if (clientIt != clients_.end()) {
+  void SocksServer::removeConn(SocksConn::Id connId) {
+    auto clientIt = connections_.find(connId);
+    if (clientIt != connections_.end()) {
       auto client = std::move(clientIt->second);
-      clients_.erase(clientIt);
+      connections_.erase(clientIt);
     }
   }
 
-  Client::Id SocksServer::getNextClientId() {
-    return ++clientId_;
+  SocksConn::Id SocksServer::getNextConnId() {
+    return ++connId;
   }
   
 } /* end of namspace: sockspp */

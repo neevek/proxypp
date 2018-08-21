@@ -1,10 +1,10 @@
 /*******************************************************************************
-**          File: client.cc
+**          File: socks_conn.cc
 **        Author: neevek <i@neevek.net>.
 ** Creation Time: 2018-07-25 Wed 06:05 PM
 **   Description: see the header file 
 *******************************************************************************/
-#include "sockspp/socks/client.h"
+#include "sockspp/socks/socks_conn.h"
 #include "nul/log.hpp"
 
 #include <algorithm>
@@ -16,14 +16,14 @@ namespace {
 }
 
 namespace sockspp {
-  Client::Client(std::unique_ptr<uvcpp::Tcp> &&conn,
+  SocksConn::SocksConn(std::unique_ptr<uvcpp::Tcp> &&conn,
                  const std::shared_ptr<nul::BufferPool> &bufferPool) :
     downstreamConn_(std::move(conn)), bufferPool_(bufferPool) {
   }
 
-  void Client::start() {
+  void SocksConn::start() {
     downstreamConn_->once<uvcpp::EvClose>(
-      // intentionally cycle-ref the Client object to avoid
+      // intentionally cycle-ref the SocksConn object to avoid
       // deletion of it before this callback is fired
       [this, _ = shared_from_this()](const auto &e, auto &client){
 
@@ -97,7 +97,7 @@ namespace sockspp {
     downstreamConn_->readStart();
   }
 
-  void Client::connectUpstream() {
+  void SocksConn::connectUpstream() {
     auto atyp = socks_.getAddressType();
     if (atyp == Socks::AddressType::IPV4) {
       uvcpp::SockAddr4 addr4;
@@ -118,7 +118,7 @@ namespace sockspp {
     } else {
       dnsRequest_ = uvcpp::DNSRequest::createUnique(downstreamConn_->getLoop());
       dnsRequest_->once<uvcpp::EvDNSRequestFinish>(
-        // intentionally cycle-ref the Client object to avoid
+        // intentionally cycle-ref the SocksConn object to avoid
         // deletion of it before this callback is fired
         [this, _ = shared_from_this()](const auto &e, auto &req){
           dnsRequest_ = nullptr;
@@ -152,7 +152,7 @@ namespace sockspp {
     }
   }
 
-  void Client::connectUpstream(uvcpp::SockAddr *sockAddr) {
+  void SocksConn::connectUpstream(uvcpp::SockAddr *sockAddr) {
     createUpstreamConnection();
     if (!upstreamConn_->connect(sockAddr)) {
       upstreamConn_->close();
@@ -160,7 +160,7 @@ namespace sockspp {
     }
   }
 
-  void Client::connectUpstream(const std::string &ip) {
+  void SocksConn::connectUpstream(const std::string &ip) {
     createUpstreamConnection();
     if (!upstreamConn_->connect(ip, ntohs(socks_.getPort()))) {
       upstreamConn_->close();
@@ -171,7 +171,7 @@ namespace sockspp {
     }
   }
 
-  void Client::createUpstreamConnection() {
+  void SocksConn::createUpstreamConnection() {
     upstreamConn_ = uvcpp::Tcp::createShared(downstreamConn_->getLoop());
     upstreamConn_->once<uvcpp::EvError>(
       [this](const auto &e, auto &client) {
@@ -182,7 +182,7 @@ namespace sockspp {
         }
       });
     upstreamConn_->once<uvcpp::EvClose>(
-      // intentionally cycle-ref the Client object to avoid
+      // intentionally cycle-ref the SocksConn object to avoid
       // deletion of it before this callback is fired
       [this, _ = shared_from_this()](const auto &e, auto &client){
       if (!upstreamConnected_ && ipIt_ != ipAddrs_.end()) {
@@ -243,21 +243,21 @@ namespace sockspp {
       });
   }
 
-  void Client::replySocksError() {
+  void SocksConn::replySocksError() {
     auto buffer = bufferPool_->requestBuffer(SOCKS_ERROR_REPLY_LENGTH);
     buffer->assign(SOCKS_ERROR_REPLY("\1"), SOCKS_ERROR_REPLY_LENGTH);
     downstreamConn_->writeAsync(std::move(buffer));
   }
 
-  void Client::close() {
+  void SocksConn::close() {
     downstreamConn_->close();
   }
 
-  void Client::setUsername(const std::string &username) {
+  void SocksConn::setUsername(const std::string &username) {
     username_ = username;
   }
 
-  void Client::setPassword(const std::string &password) {
+  void SocksConn::setPassword(const std::string &password) {
     password_ = password;
   }
 } /* end of namspace: sockspp */

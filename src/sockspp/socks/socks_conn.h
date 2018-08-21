@@ -1,11 +1,12 @@
 /*******************************************************************************
-**          File: client.h
+**          File: socks_conn.h
 **        Author: neevek <i@neevek.net>.
 ** Creation Time: 2018-07-25 Wed 06:03 PM
-**   Description: client wraps the tcp connection to the SOCKS server
+**   Description: object that wraps the tcp connection to the SOCKS server
+**                and connection to the remote         
 *******************************************************************************/
-#ifndef CLIENT_H_
-#define CLIENT_H_
+#ifndef SOCKS_CONN_H_
+#define SOCKS_CONN_H_
 #include "uvcpp.h"
 #include "sockspp/socks/socks_req_parser.h"
 #include "nul/buffer_pool.hpp"
@@ -14,11 +15,11 @@ namespace sockspp {
   /**
    * This class MUST be used with std::shared_ptr
    */
-  class Client : public std::enable_shared_from_this<Client> {
+  class SocksConn : public std::enable_shared_from_this<SocksConn> {
     public:
       using Id = uint32_t;
 
-      Client(std::unique_ptr<uvcpp::Tcp> &&conn,
+      SocksConn(std::unique_ptr<uvcpp::Tcp> &&conn,
              const std::shared_ptr<nul::BufferPool> &bufferPool);
       void start();
       void close();
@@ -48,4 +49,4 @@ namespace sockspp {
   };
 } /* end of namspace: sockspp */
 
-#endif /* end of include guard: CLIENT_H_ */
+#endif /* end of include guard: SOCKS_CONN_H_ */

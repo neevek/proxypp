@@ -7,7 +7,7 @@
 #ifndef SOCKS_SERVER_H_
 #define SOCKS_SERVER_H_
 #include "sockspp/proxy_server.h"
-#include "sockspp/socks/client.h"
+#include "sockspp/socks/socks_conn.h"
 #include "nul/buffer_pool.hpp"
 #include "uvcpp.h"
 #include <map>
@@ -27,15 +27,15 @@ namespace sockspp {
 
     private:
       void onClientConnected(std::unique_ptr<uvcpp::Tcp> conn);
-      void removeClient(Client::Id clientId);
-      Client::Id getNextClientId();
+      void removeConn(SocksConn::Id connId);
+      SocksConn::Id getNextConnId();
     
     private:
       std::unique_ptr<uvcpp::Tcp> server_{nullptr};
       std::shared_ptr<nul::BufferPool> bufferPool_{nullptr};
-      std::map<Client::Id, std::shared_ptr<Client>> clients_;
+      std::map<SocksConn::Id, std::shared_ptr<SocksConn>> connections_;
       EventCallback eventCallback_{nullptr};
-      Client::Id clientId_{0};
+      SocksConn::Id connId{0};
 
       std::string username_;
       std::string password_;
