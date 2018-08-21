@@ -8,21 +8,19 @@
 #include "socks_server.h"
 
 namespace sockspp {
-  Sockspp::Sockspp(const std::string &addr, uint16_t port, int backlog) {
-    server_ = new SocksServer(addr, port, backlog);
-  }
-
   Sockspp::~Sockspp() {
     delete reinterpret_cast<SocksServer *>(server_);
   }
 
-  bool Sockspp::start() {
+  bool Sockspp::start(const std::string &addr, uint16_t port, int backlog) {
     auto loop = std::make_shared<uvcpp::Loop>();
     if (!loop->init()) {
       LOG_E("Failed to start event loop");
       return false;
     }
-    if (!reinterpret_cast<SocksServer *>(server_)->start(loop)) {
+
+    server_ = new SocksServer(loop);
+    if (!reinterpret_cast<SocksServer *>(server_)->start(addr, port, backlog)) {
       LOG_E("Failed to start start SocksServer");
       return false;
     }

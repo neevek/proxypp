@@ -10,7 +10,7 @@
 #include <functional>
 
 namespace sockspp {
-  class Sockspp {
+  class Sockspp final {
     public:
       enum class ServerStatus {
         STARTED,
@@ -20,9 +20,8 @@ namespace sockspp {
       using EventCallback =
         std::function<void(ServerStatus event, const std::string& message)>;
       
-      Sockspp(const std::string &addr, uint16_t port, int backlog = 100);
       ~Sockspp();
-      bool start();
+      bool start(const std::string &addr, uint16_t port, int backlog = 100);
       void shutdown();
       bool isRunning();
 

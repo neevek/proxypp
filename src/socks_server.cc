@@ -8,28 +8,22 @@
 
 namespace sockspp {
 
-  SocksServer::SocksServer(const std::string &addr, Port port, int backlog) :
-    addr_(addr), port_(port), backlog_(backlog) {
+  SocksServer::SocksServer(const std::shared_ptr<uvcpp::Loop> &loop) :
+    server_(uvcpp::Tcp::createUnique(loop)) {
   }
 
-  bool SocksServer::start(const std::shared_ptr<uvcpp::Loop> &loop) {
-    if (server_) {
-      LOG_E("SocksServer already started");
-      return false;
-    }
-
+  bool SocksServer::start(const std::string &addr, Port port, int backlog) {
     bufferPool_ = std::make_shared<nul::BufferPool>(300, 60);
-    server_ = uvcpp::Tcp::createUnique(loop);
     if (server_) {
-      server_->on<uvcpp::EvError>([this](const auto &e, auto &server) {
-        LOG_E("SocksServer failed to bind on %s:%d", addr_.c_str(), port_);
+      server_->on<uvcpp::EvError>([this, addr, port](const auto &e, auto &server) {
+        LOG_E("SocksServer failed to bind on %s:%d", addr.c_str(), port);
         if (this->eventCallback_) {
           this->eventCallback_(
             ServerStatus::ERROR_OCCURRED, std::string{uv_strerror(e.status)});
         }
       });
-      server_->on<uvcpp::EvClose>([this](const auto &e, auto &server) {
-        LOG_D("SocksServer [%s:%d] closed", addr_.c_str(), port_);
+      server_->on<uvcpp::EvClose>([this, addr, port](const auto &e, auto &server) {
+        LOG_D("SocksServer [%s:%d] closed", addr.c_str(), port);
         if (this->eventCallback_) {
           this->eventCallback_(ServerStatus::SHUTDOWN, "SocksServer shutdown");
         }
@@ -39,12 +33,12 @@ namespace sockspp {
           std::move(const_cast<uvcpp::EvAccept<uvcpp::Tcp> &>(e).client));
       });
 
-      if (server_->bind(addr_, port_) && server_->listen(backlog_)) {
-        LOG_I("SocksServer bound on %s:%d", addr_.c_str(), port_);
+      if (server_->bind(addr, port) && server_->listen(backlog)) {
+        LOG_I("SocksServer bound on %s:%d", addr.c_str(), port);
         if (this->eventCallback_) {
           this->eventCallback_(
             ServerStatus::STARTED,
-            "SocksServer bound on " + addr_ + ":" + std::to_string(port_));
+            "SocksServer bound on " + addr + ":" + std::to_string(port));
         }
         return true;
       }

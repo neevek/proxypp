@@ -25,8 +25,8 @@ namespace sockspp {
       using ServerEventCallback =
         std::function<void(ServerStatus event, const std::string& message)>;
 
-      SocksServer(const std::string &addr, Port port, int backlog = 100);
-      bool start(const std::shared_ptr<uvcpp::Loop> &loop);
+      SocksServer(const std::shared_ptr<uvcpp::Loop> &loop);
+      bool start(const std::string &addr, Port port, int backlog = 100);
       void shutdown();
       bool isRunning() const;
       void setEventCallback(ServerEventCallback &&callback);
@@ -39,9 +39,6 @@ namespace sockspp {
       Client::Id getNextClientId();
     
     private:
-      std::string addr_;
-      Port port_;
-      int backlog_;
       std::unique_ptr<uvcpp::Tcp> server_{nullptr};
       std::shared_ptr<nul::BufferPool> bufferPool_{nullptr};
       std::map<Client::Id, std::shared_ptr<Client>> clients_;

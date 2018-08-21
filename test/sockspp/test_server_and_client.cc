@@ -8,8 +8,8 @@ TEST(SocksTest, ProtocolTest) {
   auto loop = std::make_shared<uvcpp::Loop>();
   ASSERT_TRUE(loop->init());
 
-  auto server = SocksServer{"0.0.0.0", 34567, 50};
-  ASSERT_TRUE(server.start(loop));
+  auto server = SocksServer{loop};
+  ASSERT_TRUE(server.start("0.0.0.0", 34567, 50));
 
   auto bufferPool = std::make_shared<nul::BufferPool>(100, 100);
   auto client = SocksClient{loop, bufferPool};
@@ -36,10 +36,10 @@ TEST(SocksTest, WithAuth) {
   auto loop = std::make_shared<uvcpp::Loop>();
   ASSERT_TRUE(loop->init());
 
-  auto server = SocksServer{"0.0.0.0", 34567, 50};
+  auto server = SocksServer{loop};
   server.setUsername("user");
   server.setPassword("password");
-  ASSERT_TRUE(server.start(loop));
+  ASSERT_TRUE(server.start("0.0.0.0", 34567, 50));
 
   auto bufferPool = std::make_shared<nul::BufferPool>(100, 100);
   auto client = SocksClient{loop, bufferPool};
@@ -68,10 +68,10 @@ TEST(SocksTest, WithIncorrectCredential) {
   auto loop = std::make_shared<uvcpp::Loop>();
   ASSERT_TRUE(loop->init());
 
-  auto server = SocksServer{"0.0.0.0", 34567, 50};
+  auto server = SocksServer{loop};
   server.setUsername("user");
   server.setPassword("password");
-  ASSERT_TRUE(server.start(loop));
+  ASSERT_TRUE(server.start("0.0.0.0", 34567, 50));
 
   auto bufferPool = std::make_shared<nul::BufferPool>(100, 100);
   auto client = SocksClient{loop, bufferPool};
