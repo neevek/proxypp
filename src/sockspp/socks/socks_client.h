@@ -7,7 +7,7 @@
 #ifndef SOCKS_CLIENT_H_
 #define SOCKS_CLIENT_H_
 #include "uvcpp.h"
-#include "socks_resp_parser.h"
+#include "sockspp/socks/socks_resp_parser.h"
 #include "nul/buffer_pool.hpp"
 
 namespace sockspp {

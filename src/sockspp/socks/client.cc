@@ -4,7 +4,7 @@
 ** Creation Time: 2018-07-25 Wed 06:05 PM
 **   Description: see the header file 
 *******************************************************************************/
-#include "client.h"
+#include "sockspp/socks/client.h"
 #include "nul/log.hpp"
 
 #include <algorithm>

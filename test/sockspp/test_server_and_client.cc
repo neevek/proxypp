@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "socks_client.h"
-#include "socks_server.h"
+#include "sockspp/socks/socks_client.h"
+#include "sockspp/socks/socks_server.h"
 
 using namespace sockspp;
 

@@ -7,7 +7,7 @@
 #ifndef SOCKS_REQ_PARSER_H_
 #define SOCKS_REQ_PARSER_H_
 #include <string>
-#include "socks.h"
+#include "sockspp/socks/socks.h"
 
 namespace sockspp {
   class SocksReqParser {

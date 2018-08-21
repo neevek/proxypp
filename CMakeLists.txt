@@ -61,12 +61,12 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 endif()
 
 set(SRCS
-  src/socks_server.cc
-  src/client.cc
-  src/socks_req_parser.cc
-  src/socks_resp_parser.cc
-  src/socks_client.cc
-  src/sockspp.cc
+  src/sockspp/socks/socks_server.cc
+  src/sockspp/socks/client.cc
+  src/sockspp/socks/socks_req_parser.cc
+  src/sockspp/socks/socks_resp_parser.cc
+  src/sockspp/socks/socks_client.cc
+  src/sockspp/socks/sockspp.cc
   )
 
 if(BUILD_SHARED_LIBRARY)

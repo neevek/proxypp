@@ -77,12 +77,12 @@ include_directories(
 
 set(COMMON_SRCS
   main.cc
-  ${SOCKSPP_SRC_DIR}/socks_server.cc
-  ${SOCKSPP_SRC_DIR}/client.cc
-  ${SOCKSPP_SRC_DIR}/socks_req_parser.cc
-  ${SOCKSPP_SRC_DIR}/socks_resp_parser.cc
-  ${SOCKSPP_SRC_DIR}/socks_client.cc
-  ${SOCKSPP_SRC_DIR}/sockspp.cc
+  ${SOCKSPP_SRC_DIR}/sockspp/socks/socks_server.cc
+  ${SOCKSPP_SRC_DIR}/sockspp/socks/client.cc
+  ${SOCKSPP_SRC_DIR}/sockspp/socks/socks_req_parser.cc
+  ${SOCKSPP_SRC_DIR}/sockspp/socks/socks_resp_parser.cc
+  ${SOCKSPP_SRC_DIR}/sockspp/socks/socks_client.cc
+  ${SOCKSPP_SRC_DIR}/sockspp/socks/sockspp.cc
   )
 set(COMMON_LINK_LIBS libgtest libgmock uv)
 

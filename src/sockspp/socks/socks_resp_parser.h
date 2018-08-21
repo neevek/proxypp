@@ -6,8 +6,8 @@
 *******************************************************************************/
 #ifndef SOCKS_RESP_PARSER_H_
 #define SOCKS_RESP_PARSER_H_
+#include "sockspp/socks/socks.h"
 #include <string>
-#include "socks.h"
 
 namespace sockspp {
   class SocksRespParser {

@@ -4,7 +4,7 @@
 ** Creation Time: 2018-07-25 Wed 05:37 PM
 **   Description: see the header 
 *******************************************************************************/
-#include "socks_server.h"
+#include "sockspp/socks/socks_server.h"
 
 namespace sockspp {
 
