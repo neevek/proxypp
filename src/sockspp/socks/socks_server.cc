@@ -84,7 +84,7 @@ namespace sockspp {
     return server_ && server_->isValid();
   }
 
-  void SocksServer::setEventCallback(ServerEventCallback &&callback) {
+  void SocksServer::setEventCallback(EventCallback &&callback) {
     eventCallback_ = callback;
   }
 

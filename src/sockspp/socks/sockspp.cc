@@ -64,7 +64,7 @@ namespace sockspp {
 
 
 #ifdef BUILD_CLIENT 
-#include "cli/cmdline.h"
+#include "sockspp/cli/cmdline.h"
 
 int main(int argc, char *argv[]) {
   cmdline::parser p;
@@ -78,15 +78,13 @@ int main(int argc, char *argv[]) {
 
   p.parse_check(argc, argv);
 
-  sockspp::Sockspp s{
-    p.get<std::string>("host"),
-    p.get<uint16_t>("port"),
-    p.get<int>("backlog"),
-  };
-
+  sockspp::Sockspp s{};
   s.setUsername(p.get<std::string>("username"));
   s.setPassword(p.get<std::string>("password"));
-  s.start();
+  s.start(
+    p.get<std::string>("host"),
+    p.get<uint16_t>("port"),
+    p.get<int>("backlog"));
   return 0;
 }
 #endif

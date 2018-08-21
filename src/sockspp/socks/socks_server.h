@@ -6,30 +6,22 @@
 *******************************************************************************/
 #ifndef SOCKS_SERVER_H_
 #define SOCKS_SERVER_H_
-#include "uvcpp.h"
-#include "client.h"
+#include "sockspp/proxy_server.h"
+#include "sockspp/socks/client.h"
 #include "nul/buffer_pool.hpp"
+#include "uvcpp.h"
 #include <map>
 
 namespace sockspp {
 
-  class SocksServer {
+  class SocksServer final : public ProxyServer {
     public:
-      using Port = uint16_t;
-
-      enum class ServerStatus {
-        STARTED,
-        SHUTDOWN,
-        ERROR_OCCURRED
-      };
-      using ServerEventCallback =
-        std::function<void(ServerStatus event, const std::string& message)>;
-
       SocksServer(const std::shared_ptr<uvcpp::Loop> &loop);
-      bool start(const std::string &addr, Port port, int backlog = 100);
-      void shutdown();
-      bool isRunning() const;
-      void setEventCallback(ServerEventCallback &&callback);
+      bool start(const std::string &addr, Port port, int backlog = 100) override;
+      void shutdown() override;
+      bool isRunning() const override;
+      void setEventCallback(EventCallback &&callback) override;
+
       void setUsername(const std::string &username);
       void setPassword(const std::string &password);
 
@@ -42,7 +34,7 @@ namespace sockspp {
       std::unique_ptr<uvcpp::Tcp> server_{nullptr};
       std::shared_ptr<nul::BufferPool> bufferPool_{nullptr};
       std::map<Client::Id, std::shared_ptr<Client>> clients_;
-      ServerEventCallback eventCallback_{nullptr};
+      EventCallback eventCallback_{nullptr};
       Client::Id clientId_{0};
 
       std::string username_;

@@ -46,7 +46,9 @@ add_library(uv IMPORTED STATIC GLOBAL)
 add_dependencies(uv uvcpp)
 set_target_properties(uv PROPERTIES IMPORTED_LOCATION "${UV_LIBRARY_DIR}/libuv.a")
 
+set(SOCKSPP_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/src)
 include_directories(
+  ${SOCKSPP_INCLUDE_DIR}
   ${UVCPP_INCLUDE_DIR}
   ${NUL_INCLUDE_DIR}
   ${UV_INCLUDE_DIR}
