@@ -62,7 +62,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
   set(LINK_LIBS ${LINK_LIBS} pthread)
 endif()
 
-set(SRCS
+set(SPD_SRCS
   src/sockspp/socks/socks_server.cc
   src/sockspp/socks/socks_conn.cc
   src/sockspp/socks/socks_req_parser.cc
@@ -71,12 +71,23 @@ set(SRCS
   src/sockspp/socks/sockspp.cc
   )
 
+set(HPD_SRCS
+  src/sockspp/http/http_header_parser.cc
+  src/sockspp/http/http_proxy_server.cc
+  src/sockspp/http/http_conn.cc
+  src/sockspp/http/hpd.cc
+  )
+
 if(BUILD_SHARED_LIBRARY)
-  add_library(sockspp SHARED ${SRCS})
-  add_dependencies(sockspp uvcpp)
-  target_link_libraries(sockspp ${LINK_LIBS})
+  add_library(proxypp SHARED ${SPD_SRCS} ${SPD_SRCS})
+  add_dependencies(proxypp uvcpp)
+  target_link_libraries(proxypp ${LINK_LIBS})
 else()
-  add_executable(sockspp ${SRCS})
-  add_dependencies(sockspp uvcpp)
-  target_link_libraries(sockspp ${LINK_LIBS})
+  add_executable(spd ${SPD_SRCS})
+  add_dependencies(spd uvcpp)
+  target_link_libraries(spd ${LINK_LIBS})
+
+  add_executable(hpd ${HPD_SRCS})
+  add_dependencies(hpd uvcpp)
+  target_link_libraries(hpd ${LINK_LIBS})
 endif()
