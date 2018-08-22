@@ -7,6 +7,7 @@
 *******************************************************************************/
 #ifndef HTTP_CONN_H_
 #define HTTP_CONN_H_
+#include "sockspp/conn.h"
 #include "uvcpp.h"
 #include "nul/buffer_pool.hpp"
 
@@ -14,15 +15,15 @@ namespace sockspp {
   /**
    * This class MUST be used with std::shared_ptr
    */
-  class HttpConn : public std::enable_shared_from_this<HttpConn> {
-    public:
-      using Id = uint32_t;
+  class HttpConn final :
+    public Conn, public std::enable_shared_from_this<HttpConn> {
 
+    public:
       HttpConn(
         std::unique_ptr<uvcpp::Tcp> &&conn,
         const std::shared_ptr<nul::BufferPool> &bufferPool);
-      void start();
-      void close();
+      virtual void start() override;
+      virtual void close() override;
 
     private:
       void replyDownstream(const std::string &message);

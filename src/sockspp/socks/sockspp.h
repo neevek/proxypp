@@ -30,7 +30,7 @@ namespace sockspp {
       void setPassword(const std::string &password);
     
     private:
-      void *server_{nullptr};
+      void *ctx_{nullptr};
   };
 } /* end of namspace: sockspp */
 

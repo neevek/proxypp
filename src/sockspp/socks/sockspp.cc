@@ -5,11 +5,21 @@
 **   Description: see the header file 
 *******************************************************************************/
 #include "sockspp/socks/sockspp.h"
-#include "sockspp/socks/socks_server.h"
+#include "sockspp/socks/socks_conn.h"
+#include "sockspp/proxy_server.hpp"
+
+namespace {
+  struct SocksProxyServerContext {
+    std::unique_ptr<sockspp::ProxyServer<sockspp::SocksConn>> server;
+    std::string username;
+    std::string password;
+  };
+}
 
 namespace sockspp {
+
   Sockspp::~Sockspp() {
-    delete reinterpret_cast<SocksServer *>(server_);
+    delete reinterpret_cast<SocksProxyServerContext *>(ctx_);
   }
 
   bool Sockspp::start(const std::string &addr, uint16_t port, int backlog) {
@@ -19,9 +29,20 @@ namespace sockspp {
       return false;
     }
 
-    server_ = new SocksServer(loop);
-    if (!reinterpret_cast<SocksServer *>(server_)->start(addr, port, backlog)) {
-      LOG_E("Failed to start start SocksServer");
+    ctx_ = new SocksProxyServerContext{};
+
+    auto ctx = reinterpret_cast<SocksProxyServerContext *>(ctx_);
+    ctx->server = std::make_unique<ProxyServer<SocksConn>>(loop);
+    ctx->server->setConnCreator([ctx](std::unique_ptr<uvcpp::Tcp> &&tcpConn,
+       const std::shared_ptr<nul::BufferPool> &bufferPool) {
+      auto conn = std::make_shared<SocksConn>(std::move(tcpConn), bufferPool);
+      conn->setUsername(ctx->username);
+      conn->setPassword(ctx->password);
+      return conn;
+    });
+
+    if (!ctx->server->start(addr, port, backlog)) {
+      LOG_E("Failed to start start SocksProxyServerContext");
       return false;
     }
     loop->run();
@@ -29,19 +50,19 @@ namespace sockspp {
   }
 
   void Sockspp::shutdown() {
-    if (server_) {
-      reinterpret_cast<SocksServer *>(server_)->shutdown();
+    if (ctx_) {
+      reinterpret_cast<SocksProxyServerContext *>(ctx_)->server->shutdown();
     }
   }
 
   bool Sockspp::isRunning() {
-    return server_ &&
-      reinterpret_cast<SocksServer *>(server_)->isRunning();
+    return ctx_ &&
+      reinterpret_cast<SocksProxyServerContext *>(ctx_)->server->isRunning();
   }
 
   void Sockspp::setEventCallback(EventCallback &&callback) {
-    if (server_) {
-      reinterpret_cast<SocksServer *>(server_)->
+    if (ctx_) {
+      reinterpret_cast<SocksProxyServerContext *>(ctx_)->server->
         setEventCallback([callback](auto status, auto &message){
         callback(static_cast<ServerStatus>(status), message);
       });
@@ -49,14 +70,14 @@ namespace sockspp {
   }
 
   void Sockspp::setUsername(const std::string &username) {
-    if (server_) {
-      reinterpret_cast<SocksServer *>(server_)->setUsername(username);
+    if (ctx_) {
+      reinterpret_cast<SocksProxyServerContext *>(ctx_)->username = username;
     }
   }
 
   void Sockspp::setPassword(const std::string &password) {
-    if (server_) {
-      reinterpret_cast<SocksServer *>(server_)->setPassword(password);
+    if (ctx_) {
+      reinterpret_cast<SocksProxyServerContext *>(ctx_)->password = password;
     }
   }
   

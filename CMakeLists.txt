@@ -63,7 +63,6 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 endif()
 
 set(SPD_SRCS
-  src/sockspp/socks/socks_server.cc
   src/sockspp/socks/socks_conn.cc
   src/sockspp/socks/socks_req_parser.cc
   src/sockspp/socks/socks_resp_parser.cc
@@ -73,7 +72,6 @@ set(SPD_SRCS
 
 set(HPD_SRCS
   src/sockspp/http/http_header_parser.cc
-  src/sockspp/http/http_proxy_server.cc
   src/sockspp/http/http_conn.cc
   src/sockspp/http/hpd.cc
   )

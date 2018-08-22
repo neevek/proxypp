@@ -5,9 +5,11 @@
 **   Description: see the header file 
 *******************************************************************************/
 #include "sockspp/http/hpd.h"
-#include "sockspp/http/http_proxy_server.h"
+#include "sockspp/http/http_conn.h"
+#include "sockspp/proxy_server.hpp"
 
 namespace sockspp {
+  using HttpProxyServer = ProxyServer<HttpConn>;
   
   Hpd::~Hpd() {
     delete reinterpret_cast<HttpProxyServer *>(server_);
@@ -21,7 +23,14 @@ namespace sockspp {
     }
 
     server_ = new HttpProxyServer(loop);
-    if (!reinterpret_cast<HttpProxyServer *>(server_)->start(addr, port, backlog)) {
+    auto server = reinterpret_cast<HttpProxyServer *>(server_);
+    server->setConnCreator(
+      [](std::unique_ptr<uvcpp::Tcp> &&tcpConn,
+         const std::shared_ptr<nul::BufferPool> &bufferPool) {
+        return std::make_shared<HttpConn>(std::move(tcpConn), bufferPool);
+      });
+
+    if (!server->start(addr, port, backlog)) {
       LOG_E("Failed to start start HttpProxyServer");
       return false;
     }
