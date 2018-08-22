@@ -200,13 +200,13 @@ namespace sockspp {
         LOG_V("Connected to: %s:%d", client.getIP().c_str(), client.getPort());
 
         auto sockAddr = upstreamConn_->getSockAddr();
-        auto atyp = Socks::AddressType::UNKNOWN;
+        //auto atyp = Socks::AddressType::UNKNOWN;
         auto bufLen = 4 + 2;  // first 4 bytes + length of port
         if (sockAddr->sa_family == AF_INET) {
-          atyp = Socks::AddressType::IPV4;
+          //atyp = Socks::AddressType::IPV4;
           bufLen += 4;
         } else {
-          atyp = Socks::AddressType::IPV6;
+          //atyp = Socks::AddressType::IPV6;
           bufLen += 16;
         }
 

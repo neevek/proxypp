@@ -121,7 +121,7 @@ namespace sockspp {
 
         LOG_V("Connected to SOCKS server for target: %s:%d",
               targetServerAddr.c_str(), targetServerPort);
-        onUpstreamConnected(conn);
+        this->onUpstreamConnected(conn);
 
         conn.template on<EvSocksRead>([this](const auto &e, auto &conn){
           downstreamConn_->writeAsync(
@@ -212,7 +212,7 @@ namespace sockspp {
     upstreamConn_->once<uvcpp::EvConnect>(
       [this](const auto &e, auto &conn) {
         LOG_V("Connected to: %s:%d", conn.getIP().c_str(), conn.getPort());
-        onUpstreamConnected(*upstreamConn_);
+        this->onUpstreamConnected(*upstreamConn_);
 
         conn.template on<uvcpp::EvBufferRecycled>([this](const auto &e, auto &conn) {
           bufferPool_->returnBuffer(std::forward<std::unique_ptr<nul::Buffer>>(
@@ -237,7 +237,7 @@ namespace sockspp {
       requestData_.clear();
 
     } else {
-      this->replyDownstream(REPLY_OK_FOR_CONNECT_REQUEST);
+      replyDownstream(REPLY_OK_FOR_CONNECT_REQUEST);
     }
   }
 
