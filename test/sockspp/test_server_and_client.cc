@@ -1,14 +1,20 @@
 #include <gtest/gtest.h>
 #include "sockspp/socks/socks_client.h"
-#include "sockspp/socks/socks_server.h"
+#include "sockspp/socks/socks_conn.h"
+#include "sockspp/proxy_server.hpp"
 
 using namespace sockspp;
+using SPD = ProxyServer<SocksConn>;
 
 TEST(SocksTest, ProtocolTest) {
   auto loop = std::make_shared<uvcpp::Loop>();
   ASSERT_TRUE(loop->init());
 
-  auto server = SocksServer{loop};
+  auto server = SPD{loop};
+  server.setConnCreator([](std::unique_ptr<uvcpp::Tcp> &&tcpConn,
+     const std::shared_ptr<nul::BufferPool> &bufferPool) {
+    return std::make_shared<SocksConn>(std::move(tcpConn), bufferPool);
+  });
   ASSERT_TRUE(server.start("0.0.0.0", 34567, 50));
 
   auto bufferPool = std::make_shared<nul::BufferPool>(100, 100);
@@ -36,9 +42,14 @@ TEST(SocksTest, WithAuth) {
   auto loop = std::make_shared<uvcpp::Loop>();
   ASSERT_TRUE(loop->init());
 
-  auto server = SocksServer{loop};
-  server.setUsername("user");
-  server.setPassword("password");
+  auto server = SPD{loop};
+  server.setConnCreator([](std::unique_ptr<uvcpp::Tcp> &&tcpConn,
+     const std::shared_ptr<nul::BufferPool> &bufferPool) {
+    auto conn = std::make_shared<SocksConn>(std::move(tcpConn), bufferPool);
+    conn->setUsername("user");
+    conn->setPassword("password");
+    return conn;
+  });
   ASSERT_TRUE(server.start("0.0.0.0", 34567, 50));
 
   auto bufferPool = std::make_shared<nul::BufferPool>(100, 100);
@@ -68,9 +79,14 @@ TEST(SocksTest, WithIncorrectCredential) {
   auto loop = std::make_shared<uvcpp::Loop>();
   ASSERT_TRUE(loop->init());
 
-  auto server = SocksServer{loop};
-  server.setUsername("user");
-  server.setPassword("password");
+  auto server = SPD{loop};
+  server.setConnCreator([](std::unique_ptr<uvcpp::Tcp> &&tcpConn,
+     const std::shared_ptr<nul::BufferPool> &bufferPool) {
+    auto conn = std::make_shared<SocksConn>(std::move(tcpConn), bufferPool);
+    conn->setUsername("user");
+    conn->setPassword("password");
+    return conn;
+  });
   ASSERT_TRUE(server.start("0.0.0.0", 34567, 50));
 
   auto bufferPool = std::make_shared<nul::BufferPool>(100, 100);
