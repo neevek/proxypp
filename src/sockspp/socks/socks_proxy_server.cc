@@ -1,10 +1,10 @@
 /*******************************************************************************
-**          File: sockspp.cc
+**          File: socks_proxy_server
 **        Author: neevek <i@neevek.net>.
 ** Creation Time: 2018-07-27 Fri 05:41 PM
 **   Description: see the header file 
 *******************************************************************************/
-#include "sockspp/socks/sockspp.h"
+#include "sockspp/socks/socks_proxy_server.h"
 #include "sockspp/socks/socks_conn.h"
 #include "sockspp/proxy_server.hpp"
 
@@ -18,11 +18,11 @@ namespace {
 
 namespace sockspp {
 
-  Sockspp::~Sockspp() {
+  SocksProxyServer::~SocksProxyServer() {
     delete reinterpret_cast<SocksProxyServerContext *>(ctx_);
   }
 
-  bool Sockspp::start(const std::string &addr, uint16_t port, int backlog) {
+  bool SocksProxyServer::start(const std::string &addr, uint16_t port, int backlog) {
     auto loop = std::make_shared<uvcpp::Loop>();
     if (!loop->init()) {
       LOG_E("Failed to start event loop");
@@ -49,18 +49,18 @@ namespace sockspp {
     return true;
   }
 
-  void Sockspp::shutdown() {
+  void SocksProxyServer::shutdown() {
     if (ctx_) {
       reinterpret_cast<SocksProxyServerContext *>(ctx_)->server->shutdown();
     }
   }
 
-  bool Sockspp::isRunning() {
+  bool SocksProxyServer::isRunning() {
     return ctx_ &&
       reinterpret_cast<SocksProxyServerContext *>(ctx_)->server->isRunning();
   }
 
-  void Sockspp::setEventCallback(EventCallback &&callback) {
+  void SocksProxyServer::setEventCallback(EventCallback &&callback) {
     if (ctx_) {
       reinterpret_cast<SocksProxyServerContext *>(ctx_)->server->
         setEventCallback([callback](auto status, auto &message){
@@ -69,13 +69,13 @@ namespace sockspp {
     }
   }
 
-  void Sockspp::setUsername(const std::string &username) {
+  void SocksProxyServer::setUsername(const std::string &username) {
     if (ctx_) {
       reinterpret_cast<SocksProxyServerContext *>(ctx_)->username = username;
     }
   }
 
-  void Sockspp::setPassword(const std::string &password) {
+  void SocksProxyServer::setPassword(const std::string &password) {
     if (ctx_) {
       reinterpret_cast<SocksProxyServerContext *>(ctx_)->password = password;
     }
@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
 
   p.parse_check(argc, argv);
 
-  sockspp::Sockspp s{};
+  sockspp::SocksProxyServer s{};
   s.setUsername(p.get<std::string>("username"));
   s.setPassword(p.get<std::string>("password"));
   s.start(

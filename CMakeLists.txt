@@ -67,13 +67,13 @@ set(SPD_SRCS
   src/sockspp/socks/socks_req_parser.cc
   src/sockspp/socks/socks_resp_parser.cc
   src/sockspp/socks/socks_client.cc
-  src/sockspp/socks/sockspp.cc
+  src/sockspp/socks/socks_proxy_server.cc
   )
 
 set(HPD_SRCS
   src/sockspp/http/http_header_parser.cc
   src/sockspp/http/http_conn.cc
-  src/sockspp/http/hpd.cc
+  src/sockspp/http/http_proxy_server.cc
   )
 
 if(BUILD_SHARED_LIBRARY)

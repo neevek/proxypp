@@ -1,16 +1,16 @@
 /*******************************************************************************
-**          File: hpd.h
+**          File: d.h
 **        Author: neevek <i@neevek.net>.
 ** Creation Time: 2018-08-22 Wed 10:10 AM
 **   Description: Http Proxy Daemon 
 *******************************************************************************/
-#ifndef SOCKSPP_HPD_H_
-#define SOCKSPP_HPD_H_ 
+#ifndef SOCKSPP_HTTP_PROXY_SERVER_H_
+#define SOCKSPP_HTTP_PROXY_SERVER_H_ 
 #include <string>
 #include <functional>
 
 namespace sockspp {
-  class Hpd final {
+  class HttpProxyServer final {
     public:
       enum class ServerStatus {
         STARTED,
@@ -20,7 +20,7 @@ namespace sockspp {
       using EventCallback =
         std::function<void(ServerStatus event, const std::string& message)>;
       
-      ~Hpd();
+      ~HttpProxyServer();
       bool start(const std::string &addr, uint16_t port, int backlog = 100);
       void shutdown();
       bool isRunning();
@@ -32,4 +32,4 @@ namespace sockspp {
   };
 } /* end of namspace: sockspp */
 
-#endif /* end of include guard: SOCKSPP_HPD_H_ */
+#endif /* end of include guard: SOCKSPP_HTTP_PROXY_SERVER_H_ */

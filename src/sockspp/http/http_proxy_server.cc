@@ -1,29 +1,27 @@
 /*******************************************************************************
-**          File: hpd.cc
+**          File: http_proxy_server.cc
 **        Author: neevek <i@neevek.net>.
 ** Creation Time: 2018-08-22 Wed 10:12 AM
 **   Description: see the header file 
 *******************************************************************************/
-#include "sockspp/http/hpd.h"
+#include "sockspp/http/http_proxy_server.h"
 #include "sockspp/http/http_conn.h"
 #include "sockspp/proxy_server.hpp"
 
 namespace sockspp {
-  using HttpProxyServer = ProxyServer<HttpConn>;
-  
-  Hpd::~Hpd() {
-    delete reinterpret_cast<HttpProxyServer *>(server_);
+  HttpProxyServer::~HttpProxyServer() {
+    delete reinterpret_cast<ProxyServer<HttpConn> *>(server_);
   }
 
-  bool Hpd::start(const std::string &addr, uint16_t port, int backlog) {
+  bool HttpProxyServer::start(const std::string &addr, uint16_t port, int backlog) {
     auto loop = std::make_shared<uvcpp::Loop>();
     if (!loop->init()) {
       LOG_E("Failed to start event loop");
       return false;
     }
 
-    server_ = new HttpProxyServer(loop);
-    auto server = reinterpret_cast<HttpProxyServer *>(server_);
+    server_ = new ProxyServer<HttpConn>(loop);
+    auto server = reinterpret_cast<ProxyServer<HttpConn> *>(server_);
     server->setConnCreator(
       [](std::unique_ptr<uvcpp::Tcp> &&tcpConn,
          const std::shared_ptr<nul::BufferPool> &bufferPool) {
@@ -31,27 +29,27 @@ namespace sockspp {
       });
 
     if (!server->start(addr, port, backlog)) {
-      LOG_E("Failed to start start HttpProxyServer");
+      LOG_E("Failed to start start ProxyServer<HttpConn>");
       return false;
     }
     loop->run();
     return true;
   }
 
-  void Hpd::shutdown() {
+  void HttpProxyServer::shutdown() {
     if (server_) {
-      reinterpret_cast<HttpProxyServer *>(server_)->shutdown();
+      reinterpret_cast<ProxyServer<HttpConn> *>(server_)->shutdown();
     }
   }
 
-  bool Hpd::isRunning() {
+  bool HttpProxyServer::isRunning() {
     return server_ &&
-      reinterpret_cast<HttpProxyServer *>(server_)->isRunning();
+      reinterpret_cast<ProxyServer<HttpConn> *>(server_)->isRunning();
   }
 
-  void Hpd::setEventCallback(EventCallback &&callback) {
+  void HttpProxyServer::setEventCallback(EventCallback &&callback) {
     if (server_) {
-      reinterpret_cast<HttpProxyServer *>(server_)->
+      reinterpret_cast<ProxyServer<HttpConn> *>(server_)->
         setEventCallback([callback](auto status, auto &message){
         callback(static_cast<ServerStatus>(status), message);
       });
@@ -73,7 +71,7 @@ int main(int argc, char *argv[]) {
 
   p.parse_check(argc, argv);
 
-  sockspp::Hpd d{};
+  sockspp::HttpProxyServer d{};
   d.start(
     p.get<std::string>("host"),
     p.get<uint16_t>("port"),
