@@ -1,10 +1,10 @@
 /*******************************************************************************
-**          File: http_conn.cc
+**          File: http_proxy_session.cc
 **        Author: neevek <i@neevek.net>.
 ** Creation Time: 2018-07-25 Wed 06:05 PM
 **   Description: see the header file 
 *******************************************************************************/
-#include "sockspp/http/http_conn.h"
+#include "sockspp/http/http_proxy_session.h"
 #include "nul/log.hpp"
 #include "nul/util.hpp"
 #include "sockspp/http/http_header_parser.h"
@@ -22,14 +22,15 @@ namespace {
 }
 
 namespace sockspp {
-  HttpConn::HttpConn(std::unique_ptr<uvcpp::Tcp> &&conn,
-                 const std::shared_ptr<nul::BufferPool> &bufferPool) :
+  HttpProxySession::HttpProxySession(
+    std::unique_ptr<uvcpp::Tcp> &&conn,
+    const std::shared_ptr<nul::BufferPool> &bufferPool) :
     downstreamConn_(std::move(conn)), bufferPool_(bufferPool) {
   }
 
-  void HttpConn::start() {
+  void HttpProxySession::start() {
     downstreamConn_->once<uvcpp::EvClose>(
-      // intentionally cycle-ref the HttpConn object to avoid
+      // intentionally cycle-ref the HttpProxySession object to avoid
       // deletion of it before this callback is fired
       [this, _ = shared_from_this()](const auto &e, auto &client){
 
@@ -72,7 +73,7 @@ namespace sockspp {
     downstreamConn_->readStart();
   }
 
-  void HttpConn::connectUpstreamWithAddr(const std::string &addr, uint16_t port) {
+  void HttpProxySession::connectUpstreamWithAddr(const std::string &addr, uint16_t port) {
     if (nul::NetUtil::isIPv4(addr) || nul::NetUtil::isIPv6(addr)) {
       connectUpstreamWithIp(addr, port);
       return;
@@ -80,7 +81,7 @@ namespace sockspp {
 
     dnsRequest_ = uvcpp::DNSRequest::createUnique(downstreamConn_->getLoop());
     dnsRequest_->once<uvcpp::EvDNSRequestFinish>(
-      // intentionally cycle-ref the HttpConn object to avoid
+      // intentionally cycle-ref the HttpProxySession object to avoid
       // deletion of it before this callback is fired
       [this, _ = shared_from_this()](const auto &e, auto &req){
         dnsRequest_ = nullptr;
@@ -113,7 +114,7 @@ namespace sockspp {
     LOG_D("Resolving address: %s", addr.c_str());
   }
 
-  void HttpConn::connectUpstreamWithIp(const std::string &ip, uint16_t port) {
+  void HttpProxySession::connectUpstreamWithIp(const std::string &ip, uint16_t port) {
     createUpstreamConnection(port);
     if (!upstreamConn_->connect(ip, port)) {
       upstreamConn_->close();
@@ -124,7 +125,7 @@ namespace sockspp {
     }
   }
 
-  void HttpConn::createUpstreamConnection(uint16_t port) {
+  void HttpProxySession::createUpstreamConnection(uint16_t port) {
     upstreamConn_ = uvcpp::Tcp::createShared(downstreamConn_->getLoop());
     upstreamConn_->once<uvcpp::EvError>(
       [this](const auto &e, auto &client) {
@@ -135,7 +136,7 @@ namespace sockspp {
         }
       });
     upstreamConn_->once<uvcpp::EvClose>(
-      // intentionally cycle-ref the HttpConn object to avoid
+      // intentionally cycle-ref the HttpProxySession object to avoid
       // deletion of it before this callback is fired
       [this, port, _ = shared_from_this()](const auto &e, auto &client){
       if (!upstreamConnected_ && ipIt_ != ipAddrs_.end()) {
@@ -174,12 +175,12 @@ namespace sockspp {
       });
   }
 
-  void HttpConn::replyDownstream(const std::string &message) {
+  void HttpProxySession::replyDownstream(const std::string &message) {
     downstreamConn_->writeAsync(
       bufferPool_->assembleDataBuffer(message.c_str(), message.length()));
   }
 
-  void HttpConn::close() {
+  void HttpProxySession::close() {
     downstreamConn_->close();
   }
 } /* end of namspace: sockspp */

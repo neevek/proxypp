@@ -4,8 +4,8 @@
 ** Creation Time: 2018-07-25 Wed 06:35 PM
 **   Description: the class that parses SOCKS messages 
 *******************************************************************************/
-#ifndef SOCKS_REQ_PARSER_H_
-#define SOCKS_REQ_PARSER_H_
+#ifndef SOCKSPP_SOCKS_REQ_PARSER_H_
+#define SOCKSPP_SOCKS_REQ_PARSER_H_
 #include <string>
 #include "sockspp/socks/socks.h"
 
@@ -61,4 +61,4 @@ namespace sockspp {
   };
 } /* end of namspace: sockspp */
 
-#endif /* end of include guard: SOCKS_REQ_PARSER_H_ */
+#endif /* end of include guard: SOCKSPP_SOCKS_REQ_PARSER_H_ */

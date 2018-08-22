@@ -6,7 +6,7 @@
 *******************************************************************************/
 #ifndef SOCKSPP_PROXY_SERVER_H_
 #define SOCKSPP_PROXY_SERVER_H_
-#include "sockspp/conn.h"
+#include "sockspp/proxy_session.h"
 #include "uvcpp.h"
 #include "nul/buffer_pool.hpp"
 
@@ -15,10 +15,9 @@
 #include <map>
 
 namespace sockspp {
-  template <typename ConnType>
   class ProxyServer {
     public:
-      using ConnCreator = std::function<std::shared_ptr<ConnType>(
+      using SessionCreator = std::function<std::shared_ptr<ProxySession>(
         std::unique_ptr<uvcpp::Tcp> &&conn,
         const std::shared_ptr<nul::BufferPool> &bufferPool)>;
 
@@ -31,15 +30,15 @@ namespace sockspp {
         std::function<void(ServerStatus event, const std::string& message)>;
 
       using Port = uint16_t;
-      using ConnId = uint32_t;
+      using SessionId = uint32_t;
 
       ProxyServer(const std::shared_ptr<uvcpp::Loop> &loop) :
         server_(uvcpp::Tcp::createUnique(loop)) {
       }
 
       bool start(const std::string &addr, Port port, int backlog) {
-        if (!createConn_) {
-          LOG_E("ConnCreator is not set, call setConnCreator() first");
+        if (!createSession_) {
+          LOG_E("SessionCreator is not set, call setSessionCreator() first");
           return false;
         }
 
@@ -88,10 +87,10 @@ namespace sockspp {
           work->start();
         }
 
-        for (auto &it : connections_) {
+        for (auto &it : sessions_) {
           it.second->close();
         }
-        connections_.clear();
+        sessions_.clear();
       }
 
       bool isRunning() const {
@@ -102,46 +101,45 @@ namespace sockspp {
         eventCallback_ = callback;
       }
 
-      void setConnCreator(ConnCreator connCreator) {
-        createConn_ = connCreator;
+      void setSessionCreator(SessionCreator sessionCreator) {
+        createSession_ = sessionCreator;
       }
-
 
     private:
       void onClientConnected(std::unique_ptr<uvcpp::Tcp> conn) {
-        auto connId = getNextConnId();
-        conn->on<uvcpp::EvClose>([this, connId](const auto &e, auto &conn) {
-          this->removeConn(connId);
+        auto sessionId = getNextSessionId();
+        conn->on<uvcpp::EvClose>([this, sessionId](const auto &e, auto &conn) {
+          this->removeSession(sessionId);
         });
 
-        //auto client = std::make_shared<ConnType>(std::move(conn), bufferPool_);
-        auto client = createConn_(std::move(conn), bufferPool_);
-        connections_[connId] = client;
+        //auto client = std::make_shared<ProxySession>(std::move(conn), bufferPool_);
+        auto client = createSession_(std::move(conn), bufferPool_);
+        sessions_[sessionId] = client;
         client->start();
 
-        LOG_D("Connection count: %zu", connections_.size());
+        LOG_D("Session count: %zu", sessions_.size());
       }
 
-      void removeConn(ConnId connId) {
-        auto clientIt = connections_.find(connId);
-        if (clientIt != connections_.end()) {
+      void removeSession(SessionId sessionId) {
+        auto clientIt = sessions_.find(sessionId);
+        if (clientIt != sessions_.end()) {
           auto client = std::move(clientIt->second);
-          connections_.erase(clientIt);
+          sessions_.erase(clientIt);
         }
       }
 
-      ConnId getNextConnId() {
-        return ++connId;
+      SessionId getNextSessionId() {
+        return ++sessionId;
       }
 
     private:
       std::unique_ptr<uvcpp::Tcp> server_{nullptr};
       std::shared_ptr<nul::BufferPool> bufferPool_{nullptr};
-      std::map<ConnId, std::shared_ptr<ConnType>> connections_;
+      std::map<SessionId, std::shared_ptr<ProxySession>> sessions_;
       EventCallback eventCallback_{nullptr};
-      ConnId connId{0};
+      SessionId sessionId{0};
 
-      ConnCreator createConn_{nullptr};
+      SessionCreator createSession_{nullptr};
   };
 } /* end of namspace: sockspp */
 

@@ -5,19 +5,18 @@
 **   Description: see the header file 
 *******************************************************************************/
 #include "sockspp/socks/socks_proxy_server.h"
-#include "sockspp/socks/socks_conn.h"
+#include "sockspp/socks/socks_proxy_session.h"
 #include "sockspp/proxy_server.hpp"
 
 namespace {
   struct SocksProxyServerContext {
-    std::unique_ptr<sockspp::ProxyServer<sockspp::SocksConn>> server;
+    std::unique_ptr<sockspp::ProxyServer> server;
     std::string username;
     std::string password;
   };
 }
 
 namespace sockspp {
-
   SocksProxyServer::~SocksProxyServer() {
     delete reinterpret_cast<SocksProxyServerContext *>(ctx_);
   }
@@ -32,13 +31,13 @@ namespace sockspp {
     ctx_ = new SocksProxyServerContext{};
 
     auto ctx = reinterpret_cast<SocksProxyServerContext *>(ctx_);
-    ctx->server = std::make_unique<ProxyServer<SocksConn>>(loop);
-    ctx->server->setConnCreator([ctx](std::unique_ptr<uvcpp::Tcp> &&tcpConn,
+    ctx->server = std::make_unique<ProxyServer>(loop);
+    ctx->server->setSessionCreator([ctx](std::unique_ptr<uvcpp::Tcp> &&conn,
        const std::shared_ptr<nul::BufferPool> &bufferPool) {
-      auto conn = std::make_shared<SocksConn>(std::move(tcpConn), bufferPool);
-      conn->setUsername(ctx->username);
-      conn->setPassword(ctx->password);
-      return conn;
+      auto sess = std::make_shared<SocksProxySession>(std::move(conn), bufferPool);
+      sess->setUsername(ctx->username);
+      sess->setPassword(ctx->password);
+      return sess;
     });
 
     if (!ctx->server->start(addr, port, backlog)) {

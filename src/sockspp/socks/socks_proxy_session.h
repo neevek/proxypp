@@ -1,12 +1,13 @@
 /*******************************************************************************
-**          File: socks_conn.h
+**          File: socks_proxy_session.h
 **        Author: neevek <i@neevek.net>.
 ** Creation Time: 2018-07-25 Wed 06:03 PM
 **   Description: object that wraps the tcp connection to the SOCKS server
 **                and connection to the remote         
 *******************************************************************************/
-#ifndef SOCKS_CONN_H_
-#define SOCKS_CONN_H_
+#ifndef SOCKSPP_SOCKS_PROXY_SESSION_H_
+#define SOCKSPP_SOCKS_PROXY_SESSION_H_
+#include "sockspp/proxy_session.h"
 #include "uvcpp.h"
 #include "sockspp/socks/socks_req_parser.h"
 #include "nul/buffer_pool.hpp"
@@ -15,14 +16,14 @@ namespace sockspp {
   /**
    * This class MUST be used with std::shared_ptr
    */
-  class SocksConn : public std::enable_shared_from_this<SocksConn> {
+  class SocksProxySession :
+    public ProxySession, public std::enable_shared_from_this<SocksProxySession> {
     public:
-      using Id = uint32_t;
-
-      SocksConn(std::unique_ptr<uvcpp::Tcp> &&conn,
-             const std::shared_ptr<nul::BufferPool> &bufferPool);
-      void start();
-      void close();
+      SocksProxySession(
+        std::unique_ptr<uvcpp::Tcp> &&conn,
+        const std::shared_ptr<nul::BufferPool> &bufferPool);
+      virtual void start() override;
+      virtual void close() override;
       void setUsername(const std::string &username);
       void setPassword(const std::string &password);
 
@@ -49,4 +50,4 @@ namespace sockspp {
   };
 } /* end of namspace: sockspp */
 
-#endif /* end of include guard: SOCKS_CONN_H_ */
+#endif /* end of include guard: SOCKSPP_SOCKS_PROXY_SESSION_H_ */

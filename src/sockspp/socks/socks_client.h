@@ -4,8 +4,8 @@
 ** Creation Time: 2018-08-20 Mon 04:51 PM
 **   Description: SOCKS client implementation
 *******************************************************************************/
-#ifndef SOCKS_CLIENT_H_
-#define SOCKS_CLIENT_H_
+#ifndef SOCKSPP_SOCKS_CLIENT_H_
+#define SOCKSPP_SOCKS_CLIENT_H_
 #include "uvcpp.h"
 #include "sockspp/socks/socks_resp_parser.h"
 #include "nul/buffer_pool.hpp"
@@ -63,4 +63,4 @@ namespace sockspp {
   
 } /* end of namspace: sockspp */
 
-#endif /* end of include guard: SOCKS_CLIENT_H_ */
+#endif /* end of include guard: SOCKSPP_SOCKS_CLIENT_H_ */

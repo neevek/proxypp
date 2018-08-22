@@ -4,8 +4,8 @@
 ** Creation Time: 2018-08-20 Mon 05:32 PM
 **   Description: SOCKS related constants
 *******************************************************************************/
-#ifndef SOCKS_H_
-#define SOCKS_H_
+#ifndef SOCKSPP_SOCKS_H_
+#define SOCKSPP_SOCKS_H_
 
 namespace sockspp {
   struct Socks {
@@ -33,4 +33,4 @@ namespace sockspp {
   };
 } /* end of namspace: sockspp */
 
-#endif /* end of include guard: SOCKS_H_ */
+#endif /* end of include guard: SOCKSPP_SOCKS_H_ */

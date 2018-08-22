@@ -5,12 +5,12 @@
 **   Description: see the header file 
 *******************************************************************************/
 #include "sockspp/http/http_proxy_server.h"
-#include "sockspp/http/http_conn.h"
+#include "sockspp/http/http_proxy_session.h"
 #include "sockspp/proxy_server.hpp"
 
 namespace sockspp {
   HttpProxyServer::~HttpProxyServer() {
-    delete reinterpret_cast<ProxyServer<HttpConn> *>(server_);
+    delete reinterpret_cast<ProxyServer *>(server_);
   }
 
   bool HttpProxyServer::start(const std::string &addr, uint16_t port, int backlog) {
@@ -20,16 +20,16 @@ namespace sockspp {
       return false;
     }
 
-    server_ = new ProxyServer<HttpConn>(loop);
-    auto server = reinterpret_cast<ProxyServer<HttpConn> *>(server_);
-    server->setConnCreator(
-      [](std::unique_ptr<uvcpp::Tcp> &&tcpConn,
+    server_ = new ProxyServer(loop);
+    auto server = reinterpret_cast<ProxyServer *>(server_);
+    server->setSessionCreator(
+      [](std::unique_ptr<uvcpp::Tcp> &&conn,
          const std::shared_ptr<nul::BufferPool> &bufferPool) {
-        return std::make_shared<HttpConn>(std::move(tcpConn), bufferPool);
+        return std::make_shared<HttpProxySession>(std::move(conn), bufferPool);
       });
 
     if (!server->start(addr, port, backlog)) {
-      LOG_E("Failed to start start ProxyServer<HttpConn>");
+      LOG_E("Failed to start start ProxyServer");
       return false;
     }
     loop->run();
@@ -38,18 +38,18 @@ namespace sockspp {
 
   void HttpProxyServer::shutdown() {
     if (server_) {
-      reinterpret_cast<ProxyServer<HttpConn> *>(server_)->shutdown();
+      reinterpret_cast<ProxyServer *>(server_)->shutdown();
     }
   }
 
   bool HttpProxyServer::isRunning() {
     return server_ &&
-      reinterpret_cast<ProxyServer<HttpConn> *>(server_)->isRunning();
+      reinterpret_cast<ProxyServer *>(server_)->isRunning();
   }
 
   void HttpProxyServer::setEventCallback(EventCallback &&callback) {
     if (server_) {
-      reinterpret_cast<ProxyServer<HttpConn> *>(server_)->
+      reinterpret_cast<ProxyServer *>(server_)->
         setEventCallback([callback](auto status, auto &message){
         callback(static_cast<ServerStatus>(status), message);
       });

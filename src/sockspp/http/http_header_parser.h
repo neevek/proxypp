@@ -4,8 +4,8 @@
 ** Creation Time: 2018-08-21 Tue 11:04 AM
 **   Description: as the file name suggests
 *******************************************************************************/
-#ifndef HTTP_HEADER_PARSER_H_
-#define HTTP_HEADER_PARSER_H_
+#ifndef SOCKSPP_HTTP_HEADER_PARSER_H_
+#define SOCKSPP_HTTP_HEADER_PARSER_H_
 #include <string>
 #include <map>
 
@@ -26,4 +26,4 @@ namespace sockspp {
   };
 } /* end of namspace: sockspp */
 
-#endif /* end of include guard: HTTP_HEADER_PARSER_H_ */
+#endif /* end of include guard: SOCKSPP_HTTP_HEADER_PARSER_H_ */
