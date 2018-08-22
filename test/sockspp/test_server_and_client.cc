@@ -2,6 +2,7 @@
 #include "sockspp/socks/socks_client.h"
 #include "sockspp/socks/socks_proxy_session.h"
 #include "sockspp/proxy_server.hpp"
+#include "nul/util.hpp"
 
 using namespace sockspp;
 
@@ -9,12 +10,12 @@ TEST(SocksTest, ProtocolTest) {
   auto loop = std::make_shared<uvcpp::Loop>();
   ASSERT_TRUE(loop->init());
 
-  auto server = ProxyServer{loop};
+  auto server = ProxyServer{};
   server.setSessionCreator([](std::unique_ptr<uvcpp::Tcp> &&tcpConn,
      const std::shared_ptr<nul::BufferPool> &bufferPool) {
     return std::make_shared<SocksProxySession>(std::move(tcpConn), bufferPool);
   });
-  ASSERT_TRUE(server.start("0.0.0.0", 34567, 50));
+  ASSERT_TRUE(server.start(loop, "0.0.0.0", 34567, 50));
 
   auto bufferPool = std::make_shared<nul::BufferPool>(100, 100);
   auto client = SocksClient{loop, bufferPool};
@@ -41,7 +42,7 @@ TEST(SocksTest, WithAuth) {
   auto loop = std::make_shared<uvcpp::Loop>();
   ASSERT_TRUE(loop->init());
 
-  auto server = ProxyServer{loop};
+  auto server = ProxyServer{};
   server.setSessionCreator([](std::unique_ptr<uvcpp::Tcp> &&tcpConn,
      const std::shared_ptr<nul::BufferPool> &bufferPool) {
     auto conn = std::make_shared<SocksProxySession>(std::move(tcpConn), bufferPool);
@@ -49,7 +50,7 @@ TEST(SocksTest, WithAuth) {
     conn->setPassword("password");
     return conn;
   });
-  ASSERT_TRUE(server.start("0.0.0.0", 34567, 50));
+  ASSERT_TRUE(server.start(loop, "0.0.0.0", 34567, 50));
 
   auto bufferPool = std::make_shared<nul::BufferPool>(100, 100);
   auto client = SocksClient{loop, bufferPool};
@@ -78,7 +79,7 @@ TEST(SocksTest, WithIncorrectCredential) {
   auto loop = std::make_shared<uvcpp::Loop>();
   ASSERT_TRUE(loop->init());
 
-  auto server = ProxyServer{loop};
+  auto server = ProxyServer{};
   server.setSessionCreator([](std::unique_ptr<uvcpp::Tcp> &&tcpConn,
      const std::shared_ptr<nul::BufferPool> &bufferPool) {
     auto conn = std::make_shared<SocksProxySession>(std::move(tcpConn), bufferPool);
@@ -86,7 +87,7 @@ TEST(SocksTest, WithIncorrectCredential) {
     conn->setPassword("password");
     return conn;
   });
-  ASSERT_TRUE(server.start("0.0.0.0", 34567, 50));
+  ASSERT_TRUE(server.start(loop, "0.0.0.0", 34567, 50));
 
   auto bufferPool = std::make_shared<nul::BufferPool>(100, 100);
   auto client = SocksClient{loop, bufferPool};

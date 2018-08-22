@@ -19,7 +19,7 @@ if(NOT BUILD_RELEASE)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLOG_VERBOSE -g")
 else()
   message("Building for release")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLOG_DEBUG -O3")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLOG_DEBUG -Os")
 endif()
 
 find_package(Threads REQUIRED)
@@ -71,13 +71,15 @@ set(SPD_SRCS
   )
 
 set(HPD_SRCS
+  src/sockspp/socks/socks_resp_parser.cc
+  src/sockspp/socks/socks_client.cc
   src/sockspp/http/http_header_parser.cc
   src/sockspp/http/http_proxy_session.cc
   src/sockspp/http/http_proxy_server.cc
   )
 
 if(BUILD_SHARED_LIBRARY)
-  add_library(proxypp SHARED ${SPD_SRCS} ${SPD_SRCS})
+  add_library(proxypp SHARED ${SPD_SRCS} ${HPD_SRCS})
   add_dependencies(proxypp uvcpp)
   target_link_libraries(proxypp ${LINK_LIBS})
 else()

@@ -5,6 +5,7 @@
 **   Description: see the header fiel 
 *******************************************************************************/
 #include "sockspp/socks/socks_client.h"
+#include "nul/util.hpp"
 #include <array>
 
 namespace sockspp {
@@ -26,6 +27,12 @@ namespace sockspp {
       conn_->publish(EvSocksHandshake{false});
       return;
     }
+
+    conn_->on<uvcpp::EvBufferRecycled>(
+      [this](const auto &e, auto &conn) {
+        bufferPool_->returnBuffer(std::forward<std::unique_ptr<nul::Buffer>>(
+            const_cast<uvcpp::EvBufferRecycled &>(e).buffer));
+      });
 
     conn_->on<uvcpp::EvRead>(
       [this, targetHost, targetPort](const auto &e, auto &client){
@@ -58,7 +65,7 @@ namespace sockspp {
           conn_->publish(EvSocksHandshake{true});
 
         } else {
-
+          // not possible to reach here
         }
       }
     });
@@ -91,27 +98,12 @@ namespace sockspp {
     uvcpp::SockAddrStorage sas;
 
     Socks::AddressType atyp = Socks::AddressType::UNKNOWN;
-    auto lastCh = targetHost[targetHost.length() - 1];
-    if (lastCh >= '0' && lastCh <= '9') { // treat it as IPv4
-      if (uv_ip4_addr(
-          targetHost.c_str(),
-          targetPort,
-          reinterpret_cast<uvcpp::SockAddr4 *>(&sas)) == 0) {
-        atyp = Socks::AddressType::IPV4;
-      }
-    }
 
-    if (atyp == Socks::AddressType::UNKNOWN &&
-        targetHost.find("::") != std::string::npos) {
-      if (uv_ip6_addr(
-          targetHost.c_str(),
-          targetPort,
-          reinterpret_cast<uvcpp::SockAddr6 *>(&sas)) == 0) {
-        atyp = Socks::AddressType::IPV6;
-      }
-    }
-
-    if (atyp == Socks::AddressType::UNKNOWN) {
+    if (nul::NetUtil::isIPv4(targetHost)) {
+      atyp = Socks::AddressType::IPV4;
+    } else if (nul::NetUtil::isIPv6(targetHost)) {
+      atyp = Socks::AddressType::IPV6;
+    } else {
       atyp = Socks::AddressType::DOMAIN_NAME;
     }
 
@@ -143,6 +135,18 @@ namespace sockspp {
 
     conn_->writeAsync(
       bufferPool_->assembleDataBuffer(reqBuf.c_str(), reqBuf.length()));
+  }
+
+  void SocksClient::writeAsync(std::unique_ptr<nul::Buffer> &&buffer) {
+    if (conn_) {
+      conn_->writeAsync(std::forward<std::unique_ptr<nul::Buffer>>(buffer));
+    }
+  }
+
+  void SocksClient::close() {
+    if (conn_) {
+      conn_->close();
+    }
   }
 
   void SocksClient::setUsername(const std::string &username) {

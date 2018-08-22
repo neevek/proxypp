@@ -8,9 +8,20 @@
 #include "sockspp/http/http_proxy_session.h"
 #include "sockspp/proxy_server.hpp"
 
+namespace {
+  struct HttpProxyServerContext {
+    sockspp::ProxyServer server;
+    std::string socksServerHost;
+    uint16_t socksServerPort;
+  };
+}
+
 namespace sockspp {
+  HttpProxyServer::HttpProxyServer() : ctx_(new HttpProxyServerContext()) {
+  }
+
   HttpProxyServer::~HttpProxyServer() {
-    delete reinterpret_cast<ProxyServer *>(server_);
+    delete reinterpret_cast<HttpProxyServerContext *>(ctx_);
   }
 
   bool HttpProxyServer::start(const std::string &addr, uint16_t port, int backlog) {
@@ -20,16 +31,18 @@ namespace sockspp {
       return false;
     }
 
-    server_ = new ProxyServer(loop);
-    auto server = reinterpret_cast<ProxyServer *>(server_);
-    server->setSessionCreator(
-      [](std::unique_ptr<uvcpp::Tcp> &&conn,
+    auto ctx = reinterpret_cast<HttpProxyServerContext *>(ctx_);
+    ctx->server.setSessionCreator(
+      [ctx](std::unique_ptr<uvcpp::Tcp> &&conn,
          const std::shared_ptr<nul::BufferPool> &bufferPool) {
-        return std::make_shared<HttpProxySession>(std::move(conn), bufferPool);
+        auto sess =
+          std::make_shared<HttpProxySession>(std::move(conn), bufferPool);
+        sess->setUpstreamSocksServer(ctx->socksServerHost, ctx->socksServerPort);
+        return sess;
       });
 
-    if (!server->start(addr, port, backlog)) {
-      LOG_E("Failed to start start ProxyServer");
+    if (!ctx->server.start(loop, addr, port, backlog)) {
+      LOG_E("Failed to start start HttpProxyServerContext");
       return false;
     }
     loop->run();
@@ -37,22 +50,31 @@ namespace sockspp {
   }
 
   void HttpProxyServer::shutdown() {
-    if (server_) {
-      reinterpret_cast<ProxyServer *>(server_)->shutdown();
+    if (ctx_) {
+      reinterpret_cast<HttpProxyServerContext *>(ctx_)->server.shutdown();
     }
   }
 
   bool HttpProxyServer::isRunning() {
-    return server_ &&
-      reinterpret_cast<ProxyServer *>(server_)->isRunning();
+    return ctx_ &&
+      reinterpret_cast<HttpProxyServerContext *>(ctx_)->server.isRunning();
   }
 
   void HttpProxyServer::setEventCallback(EventCallback &&callback) {
-    if (server_) {
-      reinterpret_cast<ProxyServer *>(server_)->
+    if (ctx_) {
+      reinterpret_cast<HttpProxyServerContext *>(ctx_)->server.
         setEventCallback([callback](auto status, auto &message){
         callback(static_cast<ServerStatus>(status), message);
       });
+    }
+  }
+
+  void HttpProxyServer::setUpstreamSocksServer(
+    const std::string &ip, uint16_t port) {
+    if (ctx_) {
+      auto ctx = reinterpret_cast<HttpProxyServerContext *>(ctx_);
+      ctx->socksServerHost = ip;
+      ctx->socksServerPort = port;
     }
   }
 
@@ -68,10 +90,18 @@ int main(int argc, char *argv[]) {
   p.add<uint16_t>(
     "port", 'p', "port number", true, 0, cmdline::range(1, 65535));
   p.add<int>("backlog", 'b', "backlog for the server", false, 200, cmdline::range(1, 65535));
+  p.add<std::string>(
+    "socks_server_host", 'H', "IPv4 or IPv6 address", false, "0.0.0.0");
+  p.add<uint16_t>(
+    "socks_server_port", 'P', "port number", false, 0, cmdline::range(1, 65535));
 
   p.parse_check(argc, argv);
 
   sockspp::HttpProxyServer d{};
+  d.setUpstreamSocksServer(
+    p.get<std::string>("socks_server_host"),
+    p.get<uint16_t>("socks_server_port"));
+
   d.start(
     p.get<std::string>("host"),
     p.get<uint16_t>("port"),

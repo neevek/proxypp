@@ -37,7 +37,10 @@ namespace sockspp {
       ipIt_ = ipAddrs_.end();
       if (upstreamConn_) {
         upstreamConn_->close();
+      } else if (socksClient_) {
+        socksClient_->close();
       }
+
       if (dnsRequest_) {
         dnsRequest_->cancel();
       }
@@ -49,8 +52,14 @@ namespace sockspp {
     downstreamConn_->on<uvcpp::EvRead>(
       [this](const auto &e, auto &conn) {
       if (upstreamConnected_) {
-        upstreamConn_->writeAsync(
-          bufferPool_->assembleDataBuffer(e.buf, e.nread));
+        if (upstreamConn_) {
+          upstreamConn_->writeAsync(
+            bufferPool_->assembleDataBuffer(e.buf, e.nread));
+
+        } else {
+          socksClient_->writeAsync(
+            bufferPool_->assembleDataBuffer(e.buf, e.nread));
+        }
         return;
       }
 
@@ -63,14 +72,65 @@ namespace sockspp {
         conn.close();
 
       } else {
-        this->connectUpstreamWithAddr(addr, port);
         if (!parser.isConnectMethod()) {
           requestData_ = parser.getRequestData();
+        }
+
+        if (socksServerPort_ > 0) {
+          this->initateSocksConnection(addr, port);
+        } else {
+          this->connectUpstreamWithAddr(addr, port);
         }
       }
     });
 
     downstreamConn_->readStart();
+  }
+
+  void HttpProxySession::initateSocksConnection(
+    const std::string &targetServerAddr, uint16_t targetServerPort) {
+    socksClient_ =
+      std::make_unique<SocksClient>(downstreamConn_->getLoop(), bufferPool_);
+
+    if (!socksClient_->connect(socksServerHost_, socksServerPort_)) {
+      replyDownstream(REPLY_BAD_GATEWAY);
+      socksClient_->close();
+
+    } else {
+      // ref the session object until the SocksClient connection is closed
+      socksClient_->once<uvcpp::EvClose>([this, _ = shared_from_this()](
+          const auto &e, auto &conn){
+        downstreamConn_->close();
+      });
+
+      socksClient_->once<uvcpp::EvError>(
+        [this](const auto &e, auto &client) {
+          if (!upstreamConnected_) {
+            LOG_E("Failed to connect to SOCKS server: %s:%d",
+                  client.getIP().c_str(), client.getPort());
+            this->replyDownstream(REPLY_BAD_GATEWAY);
+          }
+        });
+
+      socksClient_->once<EvSocksHandshake>([=](const auto &e, auto &conn){
+        if (!e.succeeded) {
+          this->replyDownstream(REPLY_BAD_GATEWAY);
+          conn.close();
+          return;
+        }
+
+        LOG_V("Connected to SOCKS server for target: %s:%d",
+              targetServerAddr.c_str(), targetServerPort);
+        onUpstreamConnected(conn);
+
+        conn.template on<EvSocksRead>([this](const auto &e, auto &conn){
+          downstreamConn_->writeAsync(
+            bufferPool_->assembleDataBuffer(e.buf, e.nread));
+        });
+      });
+
+      socksClient_->startHandshake(targetServerAddr, targetServerPort);
+    }
   }
 
   void HttpProxySession::connectUpstreamWithAddr(const std::string &addr, uint16_t port) {
@@ -114,14 +174,15 @@ namespace sockspp {
     LOG_D("Resolving address: %s", addr.c_str());
   }
 
-  void HttpProxySession::connectUpstreamWithIp(const std::string &ip, uint16_t port) {
+  void HttpProxySession::connectUpstreamWithIp(
+    const std::string &ip, uint16_t port) {
     createUpstreamConnection(port);
     if (!upstreamConn_->connect(ip, port)) {
-      upstreamConn_->close();
       // check if there're more IPs to try
       if (ipIt_ == ipAddrs_.end()) {
         replyDownstream(REPLY_BAD_GATEWAY);
       }
+      upstreamConn_->close();
     }
   }
 
@@ -149,30 +210,35 @@ namespace sockspp {
       }
     });
     upstreamConn_->once<uvcpp::EvConnect>(
-      [this](const auto &e, auto &client) {
-        upstreamConnected_ = true;
-        LOG_V("Connected to: %s:%d", client.getIP().c_str(), client.getPort());
+      [this](const auto &e, auto &conn) {
+        LOG_V("Connected to: %s:%d", conn.getIP().c_str(), conn.getPort());
+        onUpstreamConnected(*upstreamConn_);
 
-        if (!requestData_.empty()) {
-          upstreamConn_->writeAsync(bufferPool_->assembleDataBuffer(
-              requestData_.c_str(), requestData_.length()));
-          requestData_.clear();
-
-        } else {
-          this->replyDownstream(REPLY_OK_FOR_CONNECT_REQUEST);
-        }
-
-        upstreamConn_->on<uvcpp::EvBufferRecycled>([this](const auto &e, auto &conn) {
+        conn.template on<uvcpp::EvBufferRecycled>([this](const auto &e, auto &conn) {
           bufferPool_->returnBuffer(std::forward<std::unique_ptr<nul::Buffer>>(
               const_cast<uvcpp::EvBufferRecycled &>(e).buffer));
         });
-        upstreamConn_->on<uvcpp::EvRead>([this](const auto &e, auto &client){
+
+        conn.template on<uvcpp::EvRead>([this](const auto &e, auto &conn){
           downstreamConn_->writeAsync(
             bufferPool_->assembleDataBuffer(e.buf, e.nread));
         });
 
         upstreamConn_->readStart();
       });
+  }
+
+  void HttpProxySession::onUpstreamConnected(uvcpp::Tcp &conn) {
+    upstreamConnected_ = true;
+
+    if (!requestData_.empty()) {
+      conn.writeAsync(bufferPool_->assembleDataBuffer(
+          requestData_.c_str(), requestData_.length()));
+      requestData_.clear();
+
+    } else {
+      this->replyDownstream(REPLY_OK_FOR_CONNECT_REQUEST);
+    }
   }
 
   void HttpProxySession::replyDownstream(const std::string &message) {
@@ -182,5 +248,11 @@ namespace sockspp {
 
   void HttpProxySession::close() {
     downstreamConn_->close();
+  }
+
+  void HttpProxySession::setUpstreamSocksServer(
+    const std::string &ip, uint16_t port) {
+    socksServerHost_ = ip;
+    socksServerPort_ = port;
   }
 } /* end of namspace: sockspp */

@@ -15,7 +15,7 @@
 #include <map>
 
 namespace sockspp {
-  class ProxyServer {
+  class ProxyServer final {
     public:
       using SessionCreator = std::function<std::shared_ptr<ProxySession>(
         std::unique_ptr<uvcpp::Tcp> &&conn,
@@ -32,45 +32,42 @@ namespace sockspp {
       using Port = uint16_t;
       using SessionId = uint32_t;
 
-      ProxyServer(const std::shared_ptr<uvcpp::Loop> &loop) :
-        server_(uvcpp::Tcp::createUnique(loop)) {
-      }
-
-      bool start(const std::string &addr, Port port, int backlog) {
+      bool start(
+        const std::shared_ptr<uvcpp::Loop> &loop,
+        const std::string &addr, Port port, int backlog) {
         if (!createSession_) {
           LOG_E("SessionCreator is not set, call setSessionCreator() first");
           return false;
         }
 
         bufferPool_ = std::make_shared<nul::BufferPool>(300, 60);
-        if (server_) {
-          server_->on<uvcpp::EvError>([this, addr, port](const auto &e, auto &server) {
-            LOG_E("ProxyServer failed to bind on %s:%d", addr.c_str(), port);
-            if (this->eventCallback_) {
-              this->eventCallback_(
-                ServerStatus::ERROR_OCCURRED, std::string{uv_strerror(e.status)});
-            }
-          });
-          server_->on<uvcpp::EvClose>([this, addr, port](const auto &e, auto &server) {
-            LOG_D("ProxyServer [%s:%d] closed", addr.c_str(), port);
-            if (this->eventCallback_) {
-              this->eventCallback_(ServerStatus::SHUTDOWN, "ProxyServer shutdown");
-            }
-          });
-          server_->on<uvcpp::EvAccept<uvcpp::Tcp>>([this](const auto &e, auto &server) {
-            this->onClientConnected(
-              std::move(const_cast<uvcpp::EvAccept<uvcpp::Tcp> &>(e).client));
-          });
-
-          if (server_->bind(addr, port) && server_->listen(backlog)) {
-            LOG_I("ProxyServer bound on %s:%d", addr.c_str(), port);
-            if (this->eventCallback_) {
-              this->eventCallback_(
-                ServerStatus::STARTED,
-                "ProxyServer bound on " + addr + ":" + std::to_string(port));
-            }
-            return true;
+        server_ = uvcpp::Tcp::createUnique(loop);
+        server_->on<uvcpp::EvError>([this, addr, port](const auto &e, auto &s) {
+          LOG_E("ProxyServer failed to bind on %s:%d", addr.c_str(), port);
+          if (this->eventCallback_) {
+            this->eventCallback_(
+              ServerStatus::ERROR_OCCURRED, std::string{uv_strerror(e.status)});
           }
+        });
+        server_->on<uvcpp::EvClose>([this, addr, port](const auto &e, auto &s) {
+          LOG_D("ProxyServer [%s:%d] closed", addr.c_str(), port);
+          if (this->eventCallback_) {
+            this->eventCallback_(ServerStatus::SHUTDOWN, "ProxyServer shutdown");
+          }
+        });
+        server_->on<uvcpp::EvAccept<uvcpp::Tcp>>([this](const auto &e, auto &s) {
+          this->onClientConnected(
+            std::move(const_cast<uvcpp::EvAccept<uvcpp::Tcp> &>(e).client));
+        });
+
+        if (server_->bind(addr, port) && server_->listen(backlog)) {
+          LOG_I("ProxyServer bound on %s:%d", addr.c_str(), port);
+          if (this->eventCallback_) {
+            this->eventCallback_(
+              ServerStatus::STARTED,
+              "ProxyServer bound on " + addr + ":" + std::to_string(port));
+          }
+          return true;
         }
         return false;
       }

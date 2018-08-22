@@ -19,7 +19,8 @@ namespace sockspp {
       };
       using EventCallback =
         std::function<void(ServerStatus event, const std::string& message)>;
-      
+
+      SocksProxyServer();
       ~SocksProxyServer();
       bool start(const std::string &addr, uint16_t port, int backlog = 100);
       void shutdown();

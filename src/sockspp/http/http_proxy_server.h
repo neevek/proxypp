@@ -20,15 +20,18 @@ namespace sockspp {
       using EventCallback =
         std::function<void(ServerStatus event, const std::string& message)>;
       
+      HttpProxyServer();
       ~HttpProxyServer();
       bool start(const std::string &addr, uint16_t port, int backlog = 100);
       void shutdown();
       bool isRunning();
 
       void setEventCallback(EventCallback &&callback);
+
+      void setUpstreamSocksServer(const std::string &ip, uint16_t port);
     
     private:
-      void *server_{nullptr};
+      void *ctx_{nullptr};
   };
 } /* end of namspace: sockspp */
 

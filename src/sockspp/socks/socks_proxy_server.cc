@@ -10,13 +10,16 @@
 
 namespace {
   struct SocksProxyServerContext {
-    std::unique_ptr<sockspp::ProxyServer> server;
+    sockspp::ProxyServer server;
     std::string username;
     std::string password;
   };
 }
 
 namespace sockspp {
+  SocksProxyServer::SocksProxyServer() : ctx_(new SocksProxyServerContext{}) {
+  }
+
   SocksProxyServer::~SocksProxyServer() {
     delete reinterpret_cast<SocksProxyServerContext *>(ctx_);
   }
@@ -28,11 +31,8 @@ namespace sockspp {
       return false;
     }
 
-    ctx_ = new SocksProxyServerContext{};
-
     auto ctx = reinterpret_cast<SocksProxyServerContext *>(ctx_);
-    ctx->server = std::make_unique<ProxyServer>(loop);
-    ctx->server->setSessionCreator([ctx](std::unique_ptr<uvcpp::Tcp> &&conn,
+    ctx->server.setSessionCreator([ctx](std::unique_ptr<uvcpp::Tcp> &&conn,
        const std::shared_ptr<nul::BufferPool> &bufferPool) {
       auto sess = std::make_shared<SocksProxySession>(std::move(conn), bufferPool);
       sess->setUsername(ctx->username);
@@ -40,7 +40,7 @@ namespace sockspp {
       return sess;
     });
 
-    if (!ctx->server->start(addr, port, backlog)) {
+    if (!ctx->server.start(loop, addr, port, backlog)) {
       LOG_E("Failed to start start SocksProxyServerContext");
       return false;
     }
@@ -50,18 +50,18 @@ namespace sockspp {
 
   void SocksProxyServer::shutdown() {
     if (ctx_) {
-      reinterpret_cast<SocksProxyServerContext *>(ctx_)->server->shutdown();
+      reinterpret_cast<SocksProxyServerContext *>(ctx_)->server.shutdown();
     }
   }
 
   bool SocksProxyServer::isRunning() {
     return ctx_ &&
-      reinterpret_cast<SocksProxyServerContext *>(ctx_)->server->isRunning();
+      reinterpret_cast<SocksProxyServerContext *>(ctx_)->server.isRunning();
   }
 
   void SocksProxyServer::setEventCallback(EventCallback &&callback) {
     if (ctx_) {
-      reinterpret_cast<SocksProxyServerContext *>(ctx_)->server->
+      reinterpret_cast<SocksProxyServerContext *>(ctx_)->server.
         setEventCallback([callback](auto status, auto &message){
         callback(static_cast<ServerStatus>(status), message);
       });

@@ -45,6 +45,8 @@ namespace sockspp {
           std::forward<uvcpp::EventCallback<E, uvcpp::Tcp>>(callback));
       }
 
+      void writeAsync(std::unique_ptr<nul::Buffer> &&buffer);
+      void close();
       void setUsername(const std::string &username);
       void setPassword(const std::string &password);
 
