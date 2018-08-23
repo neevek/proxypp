@@ -77,7 +77,7 @@ namespace sockspp {
         }
 
         if (socksServerPort_ > 0) {
-          this->initateSocksConnection(addr, port);
+          this->initiateSocksConnection(addr, port);
         } else {
           this->connectUpstreamWithAddr(addr, port);
         }
@@ -87,7 +87,7 @@ namespace sockspp {
     downstreamConn_->readStart();
   }
 
-  void HttpProxySession::initateSocksConnection(
+  void HttpProxySession::initiateSocksConnection(
     const std::string &targetServerAddr, uint16_t targetServerPort) {
     socksClient_ =
       std::make_unique<SocksClient>(downstreamConn_->getLoop(), bufferPool_);

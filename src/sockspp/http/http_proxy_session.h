@@ -39,7 +39,7 @@ namespace sockspp {
       void onUpstreamConnected(uvcpp::Tcp &conn);
 
       // targetServerAddr can be IPv4, IPv6 or domain name
-      void initateSocksConnection(
+      void initiateSocksConnection(
         const std::string &targetServerAddr, uint16_t targetServerPort);
     
     private:
