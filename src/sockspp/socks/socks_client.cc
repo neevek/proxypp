@@ -101,8 +101,16 @@ namespace sockspp {
 
     if (nul::NetUtil::isIPv4(targetHost)) {
       atyp = Socks::AddressType::IPV4;
+      nul::NetUtil::ipv4ToBinary(
+        targetHost, reinterpret_cast<uint8_t *>(
+          &reinterpret_cast<uvcpp::SockAddr4 *>(&sas)->sin_addr));
+
     } else if (nul::NetUtil::isIPv6(targetHost)) {
       atyp = Socks::AddressType::IPV6;
+      nul::NetUtil::ipv6ToBinary(
+        targetHost, reinterpret_cast<uint8_t *>(
+          &reinterpret_cast<uvcpp::SockAddr6 *>(&sas)->sin6_addr));
+
     } else {
       atyp = Socks::AddressType::DOMAIN_NAME;
     }
