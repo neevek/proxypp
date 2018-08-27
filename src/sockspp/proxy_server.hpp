@@ -76,10 +76,9 @@ namespace sockspp {
         if (server_) {
           // must shutdown the Server from inside the loop
           auto work = uvcpp::Work::createShared(server_->getLoop());
-          work->ref(work);
-          work->once<uvcpp::EvWork>([this](const auto &e, auto &work) {
+          work->once<uvcpp::EvAfterWork>(
+            [this, _ = work](const auto &e, auto &work) {
             server_->close();
-            work.unrefAll();
           });
           work->start();
         }

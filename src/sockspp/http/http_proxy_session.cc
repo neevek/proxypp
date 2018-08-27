@@ -167,7 +167,9 @@ namespace sockspp {
         auto newIp = *ipIt_;
         ++ipIt_;
 
-        this->connectUpstreamWithIp(newIp, port);
+        if (downstreamConn_->isValid()) {
+          this->connectUpstreamWithIp(newIp, port);
+        }
       });
 
     dnsRequest_->resolve(addr);

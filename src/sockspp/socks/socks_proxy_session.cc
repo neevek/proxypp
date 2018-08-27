@@ -144,7 +144,9 @@ namespace sockspp {
         auto newIp = *ipIt_;
         ++ipIt_;
 
-        this->connectUpstream(newIp);
+        if (downstreamConn_->isValid()) {
+          this->connectUpstream(newIp);
+        }
       });
 
       dnsRequest_->resolve(socks_.getAddress());
