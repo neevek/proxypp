@@ -41,7 +41,14 @@ namespace sockspp {
         }
 
         bufferPool_ = std::make_shared<nul::BufferPool>(300, 60);
-        server_ = uvcpp::Tcp::createUnique(loop);
+        server_ = uvcpp::Tcp::createUnique(loop, uvcpp::Tcp::Domain::INET);
+
+        int on = 1;
+        server_->setSockOption(
+          SO_REUSEADDR, reinterpret_cast<void *>(&on), sizeof(on));
+        server_->setSockOption(
+          SO_REUSEPORT, reinterpret_cast<void *>(&on), sizeof(on));
+
         server_->on<uvcpp::EvError>([this, addr, port](const auto &e, auto &s) {
           LOG_E("ProxyServer failed to bind on %s:%d", addr.c_str(), port);
           if (this->eventCallback_) {
