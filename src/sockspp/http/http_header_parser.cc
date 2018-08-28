@@ -18,11 +18,7 @@ namespace sockspp {
   using su = nul::StringUtil;
 
   bool HttpHeaderParser::parse(const char *buf, std::size_t len) {
-    if (len < 4 ||
-        (buf[len - 4] != '\r') ||
-        (buf[len - 3] != '\n') ||
-        (buf[len - 2] != '\r') ||
-        (buf[len - 1] != '\n')) {
+    if (len < 10) {
       LOG_E("Invalid http header");
       return false;
     }
@@ -34,7 +30,24 @@ namespace sockspp {
         pos, HTTP_HEADER_PROXY_CONNECTION.length(), "Connection");
     }
 
-    return su::split(requestData_, "\r\n", [this](auto index, const auto &part) {
+    std::string header;
+    if ((buf[len - 4] != '\r') ||
+        (buf[len - 3] != '\n') ||
+        (buf[len - 2] != '\r') ||
+        (buf[len - 1] != '\n')) {
+      auto pos = requestData_.find("\r\n\r\n");
+      if (pos == std::string::npos) {
+        const_cast<char *>(buf)[len - 1] = '\0';
+        LOG_E("Invalid http header: %s", buf);
+        return false;
+      }
+      header = requestData_.substr(0, pos);
+
+    } else {
+      header = requestData_;
+    }
+
+    return su::split(header, "\r\n", [this](auto index, const auto &part) {
       if (index == 0) {
         return nul::StringUtil::split(
           part, " ", [this](auto index, const auto &part) {
