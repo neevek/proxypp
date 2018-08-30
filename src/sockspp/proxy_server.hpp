@@ -46,8 +46,10 @@ namespace sockspp {
         int on = 1;
         server_->setSockOption(
           SO_REUSEADDR, reinterpret_cast<void *>(&on), sizeof(on));
-        server_->setSockOption(
-          SO_REUSEPORT, reinterpret_cast<void *>(&on), sizeof(on));
+        // th following code causes crash on system with kernel version
+        // lower than 3.9.0 when loop::run() is called
+        //server_->setSockOption(
+          //SO_REUSEPORT, reinterpret_cast<void *>(&on), sizeof(on));
 
         server_->on<uvcpp::EvError>([this, addr, port](const auto &e, auto &s) {
           LOG_E("ProxyServer failed to bind on %s:%d", addr.c_str(), port);
@@ -57,7 +59,7 @@ namespace sockspp {
           }
         });
         server_->on<uvcpp::EvClose>([this, addr, port](const auto &e, auto &s) {
-          LOG_D("ProxyServer [%s:%d] closed", addr.c_str(), port);
+          LOG_I("ProxyServer [%s:%d] closed", addr.c_str(), port);
           if (this->eventCallback_) {
             this->eventCallback_(ServerStatus::SHUTDOWN, "ProxyServer shutdown");
           }
