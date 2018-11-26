@@ -76,6 +76,7 @@ set(HPD_SRCS
   src/sockspp/http/http_header_parser.cc
   src/sockspp/http/http_proxy_session.cc
   src/sockspp/http/http_proxy_server.cc
+  src/sockspp/proxy_rule_manager.cc
   )
 
 if(BUILD_SHARED_LIBRARY)

@@ -29,6 +29,10 @@ namespace sockspp {
       void setEventCallback(EventCallback &&callback);
 
       void setUpstreamSocksServer(const std::string &ip, uint16_t port);
+
+      void setProxyRulesMode(bool blackListMode);
+      void addProxyRulesWithFile(const std::string &proxyRulesFile);
+      void addProxyRulesWithString(const std::string &proxyRulesString);
     
     private:
       void *ctx_{nullptr};

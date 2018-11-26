@@ -76,7 +76,9 @@ namespace sockspp {
           requestData_ = parser.getRequestData();
         }
 
-        if (socksServerPort_ > 0) {
+        if (socksServerPort_ > 0 &&
+            (!proxyRuleManager_ ||
+             proxyRuleManager_->shouldForwardToUpstream(addr))) {
           this->initiateSocksConnection(addr, port);
         } else {
           this->connectUpstreamWithAddr(addr, port);
@@ -256,5 +258,10 @@ namespace sockspp {
     const std::string &ip, uint16_t port) {
     socksServerHost_ = ip;
     socksServerPort_ = port;
+  }
+
+  void HttpProxySession::setProxyRuleManager(
+    const std::shared_ptr<ProxyRuleManager> &proxyRuleManager) {
+    proxyRuleManager_ = proxyRuleManager;
   }
 } /* end of namspace: sockspp */

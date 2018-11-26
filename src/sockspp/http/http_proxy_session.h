@@ -8,6 +8,7 @@
 #ifndef SOCKSPP_HTTP_PROXY_SESSION_H_
 #define SOCKSPP_HTTP_PROXY_SESSION_H_
 #include "sockspp/proxy_session.h"
+#include "sockspp/proxy_rule_manager.h"
 #include "sockspp/socks/socks_client.h"
 #include "uvcpp.h"
 #include "nul/buffer_pool.hpp"
@@ -29,6 +30,8 @@ namespace sockspp {
       // A SOCKS proxy server can be set to receive reidrected connections
       // from the current HTTP proxy server
       void setUpstreamSocksServer(const std::string &ip, uint16_t port);
+      void setProxyRuleManager(
+        const std::shared_ptr<ProxyRuleManager> &proxyRuleManager);
 
     private:
       void replyDownstream(const std::string &message);
@@ -57,6 +60,7 @@ namespace sockspp {
       std::unique_ptr<SocksClient> socksClient_{nullptr};
       std::string socksServerHost_;
       uint16_t socksServerPort_{0};
+      std::shared_ptr<ProxyRuleManager> proxyRuleManager_{nullptr};
   };
 } /* end of namspace: sockspp */
 

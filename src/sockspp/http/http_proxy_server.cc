@@ -7,12 +7,15 @@
 #include "sockspp/http/http_proxy_server.h"
 #include "sockspp/http/http_proxy_session.h"
 #include "sockspp/proxy_server.hpp"
+#include <cassert>
 
 namespace {
   struct HttpProxyServerContext {
     sockspp::ProxyServer server;
     std::string socksServerHost;
     uint16_t socksServerPort;
+    bool proxyRuleMode; //  
+    std::shared_ptr<sockspp::ProxyRuleManager> proxyRuleManager{nullptr};
   };
 }
 
@@ -38,6 +41,7 @@ namespace sockspp {
         auto sess =
           std::make_shared<HttpProxySession>(std::move(conn), bufferPool);
         sess->setUpstreamSocksServer(ctx->socksServerHost, ctx->socksServerPort);
+        sess->setProxyRuleManager(ctx->proxyRuleManager);
         return sess;
       });
 
@@ -78,6 +82,44 @@ namespace sockspp {
     }
   }
 
+  void HttpProxyServer::setProxyRulesMode(bool blackListMode) {
+    assert(ctx_);
+    auto ctx = reinterpret_cast<HttpProxyServerContext *>(ctx_);
+    if (ctx->proxyRuleManager) {
+      ctx->proxyRuleManager->setProxyRulesMode(
+        blackListMode ?
+        sockspp::ProxyRuleManager::Mode::kBlackList :
+        sockspp::ProxyRuleManager::Mode::kWhiteList);
+    } else {
+      ctx->proxyRuleManager = std::make_shared<sockspp::ProxyRuleManager>(
+        blackListMode ?
+        sockspp::ProxyRuleManager::Mode::kBlackList :
+        sockspp::ProxyRuleManager::Mode::kWhiteList);
+    }
+  }
+
+  void HttpProxyServer::addProxyRulesWithFile(
+    const std::string &proxyRulesFile) {
+    assert(ctx_);
+
+    auto ctx = reinterpret_cast<HttpProxyServerContext *>(ctx_);
+    if (!ctx->proxyRuleManager) {
+      setProxyRulesMode(false);
+    }
+    ctx->proxyRuleManager->addProxyRulesWithFile(proxyRulesFile);
+  }
+
+  void HttpProxyServer::addProxyRulesWithString(
+    const std::string &proxyRulesString) {
+    assert(ctx_);
+
+    auto ctx = reinterpret_cast<HttpProxyServerContext *>(ctx_);
+    if (!ctx->proxyRuleManager) {
+      setProxyRulesMode(false);
+    }
+    ctx->proxyRuleManager->addProxyRulesWithString(proxyRulesString);
+  }
+
 } /* end of namspace: sockspp */
 
 #ifdef BUILD_CLIENT 
@@ -94,6 +136,9 @@ int main(int argc, char *argv[]) {
     "socks_server_host", 'H', "IPv4 or IPv6 address", false, "0.0.0.0");
   p.add<uint16_t>(
     "socks_server_port", 'P', "port number", false, 0, cmdline::range(1, 65535));
+  p.add<std::string>(
+    "proxy_rules_file", 'r', "regex proxy rules file, a rule for each line", false);
+  p.add("proxy_rules_mode", 'm', "false=white_list_mode, true=black_list_mode");
 
   p.parse_check(argc, argv);
 
@@ -101,6 +146,13 @@ int main(int argc, char *argv[]) {
   d.setUpstreamSocksServer(
     p.get<std::string>("socks_server_host"),
     p.get<uint16_t>("socks_server_port"));
+
+  auto proxyRulesFile = p.get<std::string>("proxy_rules_file");
+  if (!proxyRulesFile.empty()) {
+    d.setProxyRulesMode(p.exist("proxy_rules_mode"));
+    d.addProxyRulesWithFile(proxyRulesFile);
+    //d.addProxyRulesWithString("(?:.+\\.)?google\\.com\n(?:.+\\.)?youtube\\.com");
+  }
 
   d.start(
     p.get<std::string>("host"),
