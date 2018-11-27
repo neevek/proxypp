@@ -28,7 +28,9 @@ namespace sockspp {
 
       void setEventCallback(EventCallback &&callback);
 
-      void setUpstreamSocksServer(const std::string &ip, uint16_t port);
+      // socks5://127.0.0.1:1080
+      // http://127.0.0.1:8080
+      void setUpstreamServer(const std::string &uriStr);
 
       void setProxyRulesMode(bool blackListMode);
       void addProxyRulesWithFile(const std::string &proxyRulesFile);

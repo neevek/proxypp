@@ -23,7 +23,6 @@ namespace sockspp {
     std::string line;
     while (std::getline(f, line)) {
       if (!line.empty()) {
-        LOG_E("haha line [%s]", line.c_str());
         addRegexRule(line);
         ++count;
       }

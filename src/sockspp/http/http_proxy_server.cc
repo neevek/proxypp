@@ -7,14 +7,17 @@
 #include "sockspp/http/http_proxy_server.h"
 #include "sockspp/http/http_proxy_session.h"
 #include "sockspp/proxy_server.hpp"
+#include "sockspp/upstream_type.h"
+#include "nul/uri.hpp"
 #include <cassert>
 
 namespace {
   struct HttpProxyServerContext {
     sockspp::ProxyServer server;
-    std::string socksServerHost;
-    uint16_t socksServerPort;
-    bool proxyRuleMode; //  
+    sockspp::UpstreamType upstreamType{sockspp::UpstreamType::kUnknown};
+    std::string upstreamServerHost;
+    uint16_t upstreamServerPort;
+    bool proxyRuleMode;
     std::shared_ptr<sockspp::ProxyRuleManager> proxyRuleManager{nullptr};
   };
 }
@@ -40,7 +43,8 @@ namespace sockspp {
          const std::shared_ptr<nul::BufferPool> &bufferPool) {
         auto sess =
           std::make_shared<HttpProxySession>(std::move(conn), bufferPool);
-        sess->setUpstreamSocksServer(ctx->socksServerHost, ctx->socksServerPort);
+        sess->setUpstreamServer(
+          ctx->upstreamType, ctx->upstreamServerHost, ctx->upstreamServerPort);
         sess->setProxyRuleManager(ctx->proxyRuleManager);
         return sess;
       });
@@ -73,12 +77,40 @@ namespace sockspp {
     }
   }
 
-  void HttpProxyServer::setUpstreamSocksServer(
-    const std::string &ip, uint16_t port) {
+  void HttpProxyServer::setUpstreamServer(const std::string &uriStr) {
     if (ctx_) {
       auto ctx = reinterpret_cast<HttpProxyServerContext *>(ctx_);
-      ctx->socksServerHost = ip;
-      ctx->socksServerPort = port;
+      nul::URI uri;
+      if (!uri.parse(uriStr)) {
+        LOG_W("Invalid upstream server ignored: %s", uriStr.c_str());
+        return;
+      }
+      auto scheme = uri.getScheme();
+      if (scheme == "socks5") {
+        ctx->upstreamType = UpstreamType::kSOCKS5;
+
+      } else if (scheme == "http" || scheme == "https") {
+        ctx->upstreamType = UpstreamType::kHTTP;
+
+      } else {
+        LOG_W("Only 'socks5' or 'http' proxy server is support for upstream");
+        return;
+      }
+
+      ctx->upstreamServerHost = uri.getHost();
+      ctx->upstreamServerPort = uri.getPort();
+
+      if (ctx->upstreamServerHost.empty()) {
+        LOG_W("Invalid upstream server ignored: %s", uriStr.c_str());
+        ctx->upstreamType = UpstreamType::kUnknown;
+        return;
+      }
+
+      if (ctx->upstreamServerPort <= 0 || ctx->upstreamServerPort > 65535) {
+        LOG_W("Invalid upstream server port: %d", ctx->upstreamServerPort);
+        ctx->upstreamType = UpstreamType::kUnknown;
+        return;
+      }
     }
   }
 
@@ -133,9 +165,7 @@ int main(int argc, char *argv[]) {
     "port", 'p', "port number", true, 0, cmdline::range(1, 65535));
   p.add<int>("backlog", 'b', "backlog for the server", false, 200, cmdline::range(1, 65535));
   p.add<std::string>(
-    "socks_server_host", 'H', "IPv4 or IPv6 address", false, "0.0.0.0");
-  p.add<uint16_t>(
-    "socks_server_port", 'P', "port number", false, 0, cmdline::range(1, 65535));
+    "upstream_server", 'u', "e.g. socks5://127.0.0.1:1080", false);
   p.add<std::string>(
     "proxy_rules_file", 'r', "regex proxy rules file, a rule for each line", false);
   p.add("proxy_rules_mode", 'm', "false=white_list_mode, true=black_list_mode");
@@ -143,9 +173,10 @@ int main(int argc, char *argv[]) {
   p.parse_check(argc, argv);
 
   sockspp::HttpProxyServer d{};
-  d.setUpstreamSocksServer(
-    p.get<std::string>("socks_server_host"),
-    p.get<uint16_t>("socks_server_port"));
+  auto upstreamServer = p.get<std::string>("upstream_server");
+  if (!upstreamServer.empty()) {
+    d.setUpstreamServer(upstreamServer);
+  }
 
   auto proxyRulesFile = p.get<std::string>("proxy_rules_file");
   if (!proxyRulesFile.empty()) {

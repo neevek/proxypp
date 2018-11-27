@@ -76,10 +76,26 @@ namespace sockspp {
           requestData_ = parser.getRequestData();
         }
 
-        if (socksServerPort_ > 0 &&
+        if (upstreamType_ != UpstreamType::kUnknown &&
             (!proxyRuleManager_ ||
              proxyRuleManager_->shouldForwardToUpstream(addr))) {
-          this->initiateSocksConnection(addr, port);
+
+          if (upstreamType_ == UpstreamType::kSOCKS5) {
+            this->initiateSocksConnection(addr, port);
+
+          } else if (upstreamType_ == UpstreamType::kHTTP) {
+            // redirect all the request data to the remote HTTP proxy server
+            // regardless of whether it is a CONNECT request
+            requestData_ = parser.getRequestData();
+            this->connectUpstreamWithAddr(
+              upstreamServerHost_, upstreamServerPort_);
+
+          } else {
+            // DIRECT connect if no proxy server is available
+            // Should not reach here!
+            this->connectUpstreamWithAddr(addr, port);
+          }
+
         } else {
           this->connectUpstreamWithAddr(addr, port);
         }
@@ -94,7 +110,7 @@ namespace sockspp {
     socksClient_ =
       std::make_unique<SocksClient>(downstreamConn_->getLoop(), bufferPool_);
 
-    if (!socksClient_->connect(socksServerHost_, socksServerPort_)) {
+    if (!socksClient_->connect(upstreamServerHost_, upstreamServerPort_)) {
       replyDownstream(REPLY_BAD_GATEWAY);
       socksClient_->close();
 
@@ -254,10 +270,11 @@ namespace sockspp {
     downstreamConn_->close();
   }
 
-  void HttpProxySession::setUpstreamSocksServer(
-    const std::string &ip, uint16_t port) {
-    socksServerHost_ = ip;
-    socksServerPort_ = port;
+  void HttpProxySession::setUpstreamServer(
+    UpstreamType upstreamType, const std::string &ip, uint16_t port) {
+    upstreamType_ = upstreamType;
+    upstreamServerHost_ = ip;
+    upstreamServerPort_ = port;
   }
 
   void HttpProxySession::setProxyRuleManager(
