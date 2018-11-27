@@ -30,7 +30,7 @@ include(ExternalProject)
 # add uvcpp dependency
 ExternalProject_Add(uvcpp
   PREFIX "${CMAKE_BINARY_DIR}/deps"
-  GIT_REPOSITORY "${CMAKE_SOURCE_DIR}/../../uvcpp"
+  GIT_REPOSITORY "$ENV{HOME}/dev/github/uvcpp"
   GIT_TAG "master"
   CMAKE_ARGS -DCMAKE_ANDROID_STANDALONE_TOOLCHAIN=${CMAKE_ANDROID_STANDALONE_TOOLCHAIN}
   #UPDATE_COMMAND ""
@@ -61,15 +61,14 @@ ExternalProject_Add(gtest
   UPDATE_DISCONNECTED 1
 )
 # Get GTest source and binary directories from CMake project
-ExternalProject_Get_Property(gtest SOURCE_DIR BINARY_DIR)
-set(GTEST_INCLUDE_DIR ${SOURCE_DIR})
-set(GTEST_LIBRARY_DIR ${BINARY_DIR})
-SET_LIBRARY_PROP(libgtest gtest "${GTEST_LIBRARY_DIR}/googlemock/gtest/libgtest.a")
-SET_LIBRARY_PROP(libgmock gtest "${GTEST_LIBRARY_DIR}/googlemock/libgmock.a")
+ExternalProject_Get_Property(gtest INSTALL_DIR)
+set(GTEST_INCLUDE_DIR ${INSTALL_DIR}/installed/include)
+set(GTEST_LIBRARY_DIR ${INSTALL_DIR}/installed/lib)
+SET_LIBRARY_PROP(libgtest gtest "${GTEST_LIBRARY_DIR}/libgtest.a")
+SET_LIBRARY_PROP(libgmock gtest "${GTEST_LIBRARY_DIR}/libgmock.a")
 
 include_directories(
-  "${GTEST_INCLUDE_DIR}/googletest/include"
-  "${GTEST_INCLUDE_DIR}/googlemock/include"
+  "${GTEST_INCLUDE_DIR}"
   "${UVCPP_INCLUDE_DIR}"
   "${NUL_INCLUDE_DIR}"
   "${UV_INCLUDE_DIR}"
