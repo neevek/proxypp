@@ -106,7 +106,7 @@ namespace proxypp {
         return;
       }
 
-      if (ctx->upstreamServerPort <= 0 || ctx->upstreamServerPort > 65535) {
+      if (ctx->upstreamServerPort == 0) {
         LOG_W("Invalid upstream server port: %d", ctx->upstreamServerPort);
         ctx->upstreamType = UpstreamType::kUnknown;
         return;
