@@ -4,15 +4,15 @@
 ** Creation Time: 2018-11-27 Tue 09:52 AM
 **   Description: socks5 or http
 *******************************************************************************/
-#ifndef SOCKSPP_UPSTREAM_TYPE_H_
-#define SOCKSPP_UPSTREAM_TYPE_H_
+#ifndef PROXYPP_UPSTREAM_TYPE_H_
+#define PROXYPP_UPSTREAM_TYPE_H_
 
-namespace sockspp {
+namespace proxypp {
   enum class UpstreamType {
     kUnknown,
     kSOCKS5,
     kHTTP
   };
-} /* end of namspace: sockspp */
+} /* end of namspace: proxypp */
 
-#endif /* end of include guard: SOCKSPP_UPSTREAM_TYPE_H_ */
+#endif /* end of include guard: PROXYPP_UPSTREAM_TYPE_H_ */

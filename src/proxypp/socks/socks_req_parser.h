@@ -4,12 +4,12 @@
 ** Creation Time: 2018-07-25 Wed 06:35 PM
 **   Description: the class that parses SOCKS messages 
 *******************************************************************************/
-#ifndef SOCKSPP_SOCKS_REQ_PARSER_H_
-#define SOCKSPP_SOCKS_REQ_PARSER_H_
+#ifndef PROXYPP_SOCKS_REQ_PARSER_H_
+#define PROXYPP_SOCKS_REQ_PARSER_H_
 #include <string>
-#include "sockspp/socks/socks.h"
+#include "proxypp/socks/socks.h"
 
-namespace sockspp {
+namespace proxypp {
   class SocksReqParser {
     public:
       enum class State {
@@ -59,6 +59,6 @@ namespace sockspp {
       std::string parsedUsername_;
       std::string parsedPassword_;
   };
-} /* end of namspace: sockspp */
+} /* end of namspace: proxypp */
 
-#endif /* end of include guard: SOCKSPP_SOCKS_REQ_PARSER_H_ */
+#endif /* end of include guard: PROXYPP_SOCKS_REQ_PARSER_H_ */

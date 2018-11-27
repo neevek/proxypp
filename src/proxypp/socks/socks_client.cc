@@ -4,11 +4,11 @@
 ** Creation Time: 2018-08-20 Mon 05:02 PM
 **   Description: see the header fiel 
 *******************************************************************************/
-#include "sockspp/socks/socks_client.h"
+#include "proxypp/socks/socks_client.h"
 #include "nul/util.hpp"
 #include <array>
 
-namespace sockspp {
+namespace proxypp {
 
   SocksClient::SocksClient(
     const std::shared_ptr<uvcpp::Loop> &loop,

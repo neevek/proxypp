@@ -5,16 +5,16 @@
 **   Description: object that wraps the tcp connection to the HTTP proxy server
 **                and connection to the remote         
 *******************************************************************************/
-#ifndef SOCKSPP_HTTP_PROXY_SESSION_H_
-#define SOCKSPP_HTTP_PROXY_SESSION_H_
-#include "sockspp/proxy_session.h"
-#include "sockspp/upstream_type.h"
-#include "sockspp/proxy_rule_manager.h"
-#include "sockspp/socks/socks_client.h"
+#ifndef PROXYPP_HTTP_PROXY_SESSION_H_
+#define PROXYPP_HTTP_PROXY_SESSION_H_
+#include "proxypp/proxy_session.h"
+#include "proxypp/upstream_type.h"
+#include "proxypp/proxy_rule_manager.h"
+#include "proxypp/socks/socks_client.h"
 #include "uvcpp.h"
 #include "nul/buffer_pool.hpp"
 
-namespace sockspp {
+namespace proxypp {
   /**
    * This class MUST be used with std::shared_ptr
    */
@@ -63,6 +63,6 @@ namespace sockspp {
       uint16_t upstreamServerPort_{0};
       std::shared_ptr<ProxyRuleManager> proxyRuleManager_{nullptr};
   };
-} /* end of namspace: sockspp */
+} /* end of namspace: proxypp */
 
-#endif /* end of include guard: SOCKSPP_HTTP_PROXY_SESSION_H_ */
+#endif /* end of include guard: PROXYPP_HTTP_PROXY_SESSION_H_ */

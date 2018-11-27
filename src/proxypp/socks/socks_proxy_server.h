@@ -2,14 +2,14 @@
 **          File: socks_proxy_server.h
 **        Author: neevek <i@neevek.net>.
 ** Creation Time: 2018-07-27 Fri 05:24 PM
-**   Description: the sockspp interface 
+**   Description: the proxypp interface 
 *******************************************************************************/
-#ifndef SOCKSPP_SOCKS_PROXY_SERVER_H_
-#define SOCKSPP_SOCKS_PROXY_SERVER_H_
+#ifndef PROXYPP_SOCKS_PROXY_SERVER_H_
+#define PROXYPP_SOCKS_PROXY_SERVER_H_
 #include <string>
 #include <functional>
 
-namespace sockspp {
+namespace proxypp {
   class SocksProxyServer final {
     public:
       enum class ServerStatus {
@@ -33,6 +33,6 @@ namespace sockspp {
     private:
       void *ctx_{nullptr};
   };
-} /* end of namspace: sockspp */
+} /* end of namspace: proxypp */
 
-#endif /* end of include guard: SOCKSPP_SOCKS_PROXY_SERVER_H_ */
+#endif /* end of include guard: PROXYPP_SOCKS_PROXY_SERVER_H_ */

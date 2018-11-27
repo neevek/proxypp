@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 
 set(CMAKE_CXX_FLAGS "-Wall -std=c++14 -fexceptions -frtti -DLOG_TAG_NAME='\"TR\"'")
 if(CMAKE_ANDROID_STANDALONE_TOOLCHAIN)
-  message("Building shared sockspp library for Android...")
+  message("Building shared proxypp library for Android...")
 
   set(BUILD_SHARED_LIBRARY TRUE)
 
@@ -46,9 +46,9 @@ add_library(uv IMPORTED STATIC GLOBAL)
 add_dependencies(uv uvcpp)
 set_target_properties(uv PROPERTIES IMPORTED_LOCATION "${UV_LIBRARY_DIR}/libuv.a")
 
-set(SOCKSPP_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/src)
+set(PROXYPP_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/src)
 include_directories(
-  ${SOCKSPP_INCLUDE_DIR}
+  ${PROXYPP_INCLUDE_DIR}
   ${UVCPP_INCLUDE_DIR}
   ${NUL_INCLUDE_DIR}
   ${UV_INCLUDE_DIR}
@@ -63,20 +63,20 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 endif()
 
 set(SPD_SRCS
-  src/sockspp/socks/socks_proxy_session.cc
-  src/sockspp/socks/socks_req_parser.cc
-  src/sockspp/socks/socks_resp_parser.cc
-  src/sockspp/socks/socks_client.cc
-  src/sockspp/socks/socks_proxy_server.cc
+  src/proxypp/socks/socks_proxy_session.cc
+  src/proxypp/socks/socks_req_parser.cc
+  src/proxypp/socks/socks_resp_parser.cc
+  src/proxypp/socks/socks_client.cc
+  src/proxypp/socks/socks_proxy_server.cc
   )
 
 set(HPD_SRCS
-  src/sockspp/socks/socks_resp_parser.cc
-  src/sockspp/socks/socks_client.cc
-  src/sockspp/http/http_header_parser.cc
-  src/sockspp/http/http_proxy_session.cc
-  src/sockspp/http/http_proxy_server.cc
-  src/sockspp/proxy_rule_manager.cc
+  src/proxypp/socks/socks_resp_parser.cc
+  src/proxypp/socks/socks_client.cc
+  src/proxypp/http/http_header_parser.cc
+  src/proxypp/http/http_proxy_session.cc
+  src/proxypp/http/http_proxy_server.cc
+  src/proxypp/proxy_rule_manager.cc
   )
 
 if(BUILD_SHARED_LIBRARY)

@@ -4,19 +4,19 @@
 ** Creation Time: 2018-07-27 Fri 05:41 PM
 **   Description: see the header file 
 *******************************************************************************/
-#include "sockspp/socks/socks_proxy_server.h"
-#include "sockspp/socks/socks_proxy_session.h"
-#include "sockspp/proxy_server.hpp"
+#include "proxypp/socks/socks_proxy_server.h"
+#include "proxypp/socks/socks_proxy_session.h"
+#include "proxypp/proxy_server.hpp"
 
 namespace {
   struct SocksProxyServerContext {
-    sockspp::ProxyServer server;
+    proxypp::ProxyServer server;
     std::string username;
     std::string password;
   };
 }
 
-namespace sockspp {
+namespace proxypp {
   SocksProxyServer::SocksProxyServer() : ctx_(new SocksProxyServerContext{}) {
   }
 
@@ -41,7 +41,7 @@ namespace sockspp {
     });
 
     if (!ctx->server.start(loop, addr, port, backlog)) {
-      LOG_E("Failed to start start SocksProxyServerContext");
+      LOG_E("Failed to start SocksProxyServerContext");
       return false;
     }
     loop->run();
@@ -80,11 +80,11 @@ namespace sockspp {
     }
   }
   
-} /* end of namspace: sockspp */
+} /* end of namspace: proxypp */
 
 
 #ifdef BUILD_CLIENT 
-#include "sockspp/cli/cmdline.h"
+#include "proxypp/cli/cmdline.h"
 
 int main(int argc, char *argv[]) {
   cmdline::parser p;
@@ -98,7 +98,7 @@ int main(int argc, char *argv[]) {
 
   p.parse_check(argc, argv);
 
-  sockspp::SocksProxyServer s{};
+  proxypp::SocksProxyServer s{};
   s.setUsername(p.get<std::string>("username"));
   s.setPassword(p.get<std::string>("password"));
   s.start(

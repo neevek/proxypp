@@ -2,9 +2,9 @@ cmake_minimum_required(VERSION 2.8)
 
 enable_testing()
 
-set(CMAKE_CXX_FLAGS "-g -Wall -std=c++14 -DLOG_VERBOSE -DLOG_TAG_NAME='\"sockspp\"'")
-set(SOCKSPP_SRC_DIR ${CMAKE_SOURCE_DIR}/../src)
-include_directories(${SOCKSPP_SRC_DIR})
+set(CMAKE_CXX_FLAGS "-g -Wall -std=c++14 -DLOG_VERBOSE -DLOG_TAG_NAME='\"proxypp\"'")
+set(PROXYPP_SRC_DIR ${CMAKE_SOURCE_DIR}/../src)
+include_directories(${PROXYPP_SRC_DIR})
 
 find_package(Threads REQUIRED)
 
@@ -77,18 +77,18 @@ include_directories(
 
 set(COMMON_SRCS
   main.cc
-  ${SOCKSPP_SRC_DIR}/sockspp/socks/socks_proxy_session.cc
-  ${SOCKSPP_SRC_DIR}/sockspp/socks/socks_req_parser.cc
-  ${SOCKSPP_SRC_DIR}/sockspp/socks/socks_resp_parser.cc
-  ${SOCKSPP_SRC_DIR}/sockspp/socks/socks_client.cc
-  ${SOCKSPP_SRC_DIR}/sockspp/socks/socks_proxy_server.cc
+  ${PROXYPP_SRC_DIR}/proxypp/socks/socks_proxy_session.cc
+  ${PROXYPP_SRC_DIR}/proxypp/socks/socks_req_parser.cc
+  ${PROXYPP_SRC_DIR}/proxypp/socks/socks_resp_parser.cc
+  ${PROXYPP_SRC_DIR}/proxypp/socks/socks_client.cc
+  ${PROXYPP_SRC_DIR}/proxypp/socks/socks_proxy_server.cc
   )
 set(COMMON_LINK_LIBS libgtest libgmock uv)
 
-macro(ADD_SOCKSPP_TEST TEST_NAME TEST_SOURCE)
+macro(ADD_PROXYPP_TEST TEST_NAME TEST_SOURCE)
   add_executable(${TEST_NAME} ${COMMON_SRCS} ${TEST_SOURCE})
   target_link_libraries(${TEST_NAME} ${COMMON_LINK_LIBS})
   add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
 endmacro()
 
-ADD_SOCKSPP_TEST(client sockspp/test_server_and_client.cc)
+ADD_PROXYPP_TEST(client proxypp/test_server_and_client.cc)

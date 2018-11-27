@@ -4,12 +4,12 @@
 ** Creation Time: 2018-07-25 Wed 06:35 PM
 **   Description: the class that parses SOCKS messages 
 *******************************************************************************/
-#ifndef SOCKSPP_SOCKS_RESP_PARSER_H_
-#define SOCKSPP_SOCKS_RESP_PARSER_H_
-#include "sockspp/socks/socks.h"
+#ifndef PROXYPP_SOCKS_RESP_PARSER_H_
+#define PROXYPP_SOCKS_RESP_PARSER_H_
+#include "proxypp/socks/socks.h"
 #include <string>
 
-namespace sockspp {
+namespace proxypp {
   class SocksRespParser {
     public:
       enum class State {
@@ -33,6 +33,6 @@ namespace sockspp {
       std::string boundAddr_;
       uint16_t boundPort_{0};
   };
-} /* end of namspace: sockspp */
+} /* end of namspace: proxypp */
 
-#endif /* end of include guard: SOCKSPP_SOCKS_RESP_PARSER_H_ */
+#endif /* end of include guard: PROXYPP_SOCKS_RESP_PARSER_H_ */

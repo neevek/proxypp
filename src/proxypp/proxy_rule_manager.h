@@ -6,12 +6,12 @@
 **                the traffic to upstream or connect the requested server
 **                directly
 *******************************************************************************/
-#ifndef SOCKSPP_PROXY_RULE_MANAGER_H_
-#define SOCKSPP_PROXY_RULE_MANAGER_H_
+#ifndef PROXYPP_PROXY_RULE_MANAGER_H_
+#define PROXYPP_PROXY_RULE_MANAGER_H_
 #include <vector>
 #include <regex>
 
-namespace sockspp {
+namespace proxypp {
   class ProxyRuleManager {
     public:
       enum class Mode {
@@ -34,6 +34,6 @@ namespace sockspp {
       std::vector<std::regex> regexRules_;
       Mode mode_;
   };
-} /* end of namspace: sockspp */
+} /* end of namspace: proxypp */
 
-#endif /* end of include guard: SOCKSPP_PROXY_RULE_MANAGER_H_ */
+#endif /* end of include guard: PROXYPP_PROXY_RULE_MANAGER_H_ */

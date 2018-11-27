@@ -4,7 +4,7 @@
 ** Creation Time: 2018-07-26 Thu 02:22 PM
 **   Description: see the header file 
 *******************************************************************************/
-#include "sockspp/socks/socks_req_parser.h"
+#include "proxypp/socks/socks_req_parser.h"
 #include "nul/log.hpp"
 
 namespace {
@@ -14,7 +14,7 @@ namespace {
     return replyField 
 }
 
-namespace sockspp {
+namespace proxypp {
 
   SocksReqParser::ReplyField SocksReqParser::parse(const char *buf, std::size_t len) {
     if (state_ > State::PARSING_REQUEST) {
@@ -202,4 +202,4 @@ namespace sockspp {
     return parsedPassword_;
   }
 
-} /* end of namspace: sockspp */
+} /* end of namspace: proxypp */

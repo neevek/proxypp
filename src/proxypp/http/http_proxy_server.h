@@ -4,12 +4,12 @@
 ** Creation Time: 2018-08-22 Wed 10:10 AM
 **   Description: Http Proxy Daemon 
 *******************************************************************************/
-#ifndef SOCKSPP_HTTP_PROXY_SERVER_H_
-#define SOCKSPP_HTTP_PROXY_SERVER_H_ 
+#ifndef PROXYPP_HTTP_PROXY_SERVER_H_
+#define PROXYPP_HTTP_PROXY_SERVER_H_ 
 #include <string>
 #include <functional>
 
-namespace sockspp {
+namespace proxypp {
   class HttpProxyServer final {
     public:
       enum class ServerStatus {
@@ -39,6 +39,6 @@ namespace sockspp {
     private:
       void *ctx_{nullptr};
   };
-} /* end of namspace: sockspp */
+} /* end of namspace: proxypp */
 
-#endif /* end of include guard: SOCKSPP_HTTP_PROXY_SERVER_H_ */
+#endif /* end of include guard: PROXYPP_HTTP_PROXY_SERVER_H_ */

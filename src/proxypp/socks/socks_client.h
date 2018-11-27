@@ -4,13 +4,13 @@
 ** Creation Time: 2018-08-20 Mon 04:51 PM
 **   Description: SOCKS client implementation
 *******************************************************************************/
-#ifndef SOCKSPP_SOCKS_CLIENT_H_
-#define SOCKSPP_SOCKS_CLIENT_H_
+#ifndef PROXYPP_SOCKS_CLIENT_H_
+#define PROXYPP_SOCKS_CLIENT_H_
 #include "uvcpp.h"
-#include "sockspp/socks/socks_resp_parser.h"
+#include "proxypp/socks/socks_resp_parser.h"
 #include "nul/buffer_pool.hpp"
 
-namespace sockspp {
+namespace proxypp {
 
   struct EvSocksRead : public uvcpp::EvRead {
     EvSocksRead(const char *buf, ssize_t nread) : uvcpp::EvRead(buf, nread) { }
@@ -63,6 +63,6 @@ namespace sockspp {
       SocksRespParser socks_;
   };
   
-} /* end of namspace: sockspp */
+} /* end of namspace: proxypp */
 
-#endif /* end of include guard: SOCKSPP_SOCKS_CLIENT_H_ */
+#endif /* end of include guard: PROXYPP_SOCKS_CLIENT_H_ */

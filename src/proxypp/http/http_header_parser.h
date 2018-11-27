@@ -4,12 +4,12 @@
 ** Creation Time: 2018-08-21 Tue 11:04 AM
 **   Description: as the file name suggests
 *******************************************************************************/
-#ifndef SOCKSPP_HTTP_HEADER_PARSER_H_
-#define SOCKSPP_HTTP_HEADER_PARSER_H_
+#ifndef PROXYPP_HTTP_HEADER_PARSER_H_
+#define PROXYPP_HTTP_HEADER_PARSER_H_
 #include <string>
 #include <map>
 
-namespace sockspp {
+namespace proxypp {
   class HttpHeaderParser final {
     public:
       bool parse(const char *buf, std::size_t len);
@@ -24,6 +24,6 @@ namespace sockspp {
       std::string httpVersion_;
       std::map<std::string, std::string> headers_;
   };
-} /* end of namspace: sockspp */
+} /* end of namspace: proxypp */
 
-#endif /* end of include guard: SOCKSPP_HTTP_HEADER_PARSER_H_ */
+#endif /* end of include guard: PROXYPP_HTTP_HEADER_PARSER_H_ */

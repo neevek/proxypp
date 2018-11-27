@@ -5,14 +5,14 @@
 **   Description: object that wraps the tcp connection to the SOCKS server
 **                and connection to the remote         
 *******************************************************************************/
-#ifndef SOCKSPP_SOCKS_PROXY_SESSION_H_
-#define SOCKSPP_SOCKS_PROXY_SESSION_H_
-#include "sockspp/proxy_session.h"
+#ifndef PROXYPP_SOCKS_PROXY_SESSION_H_
+#define PROXYPP_SOCKS_PROXY_SESSION_H_
+#include "proxypp/proxy_session.h"
 #include "uvcpp.h"
-#include "sockspp/socks/socks_req_parser.h"
+#include "proxypp/socks/socks_req_parser.h"
 #include "nul/buffer_pool.hpp"
 
-namespace sockspp {
+namespace proxypp {
   /**
    * This class MUST be used with std::shared_ptr
    */
@@ -48,6 +48,6 @@ namespace sockspp {
       std::string username_;
       std::string password_;
   };
-} /* end of namspace: sockspp */
+} /* end of namspace: proxypp */
 
-#endif /* end of include guard: SOCKSPP_SOCKS_PROXY_SESSION_H_ */
+#endif /* end of include guard: PROXYPP_SOCKS_PROXY_SESSION_H_ */

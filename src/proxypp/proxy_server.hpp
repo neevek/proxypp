@@ -4,9 +4,9 @@
 ** Creation Time: 2018-08-22 Wed 11:39 AM
 **   Description: proxy server interface
 *******************************************************************************/
-#ifndef SOCKSPP_PROXY_SERVER_H_
-#define SOCKSPP_PROXY_SERVER_H_
-#include "sockspp/proxy_session.h"
+#ifndef PROXYPP_PROXY_SERVER_H_
+#define PROXYPP_PROXY_SERVER_H_
+#include "proxypp/proxy_session.h"
 #include "uvcpp.h"
 #include "nul/buffer_pool.hpp"
 
@@ -14,7 +14,7 @@
 #include <functional>
 #include <map>
 
-namespace sockspp {
+namespace proxypp {
   class ProxyServer final {
     public:
       using SessionCreator = std::function<std::shared_ptr<ProxySession>(
@@ -146,7 +146,7 @@ namespace sockspp {
 
       SessionCreator createSession_{nullptr};
   };
-} /* end of namspace: sockspp */
+} /* end of namspace: proxypp */
 
-#endif /* end of include guard: SOCKSPP_PROXY_SERVER_H_ */
+#endif /* end of include guard: PROXYPP_PROXY_SERVER_H_ */
 

@@ -4,7 +4,7 @@
 ** Creation Time: 2018-08-21 Tue 11:34 AM
 **   Description: see the header file 
 *******************************************************************************/
-#include "sockspp/http/http_header_parser.h"
+#include "proxypp/http/http_header_parser.h"
 #include "nul/log.hpp"
 #include "nul/util.hpp"
 #include "nul/uri.hpp"
@@ -14,7 +14,7 @@ namespace {
   static const std::string HTTP_HEADER_PROXY_CONNECTION = "Proxy-Connection";
 }
 
-namespace sockspp {
+namespace proxypp {
   using su = nul::StringUtil;
 
   bool HttpHeaderParser::parse(const char *buf, std::size_t len) {
@@ -123,4 +123,4 @@ namespace sockspp {
     return "CONNECT" == method_;
   }
 
-} /* end of namspace: sockspp */
+} /* end of namspace: proxypp */

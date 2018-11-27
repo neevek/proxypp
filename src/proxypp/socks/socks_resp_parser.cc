@@ -4,11 +4,11 @@
 ** Creation Time: 2018-08-20 Mon 05:48 PM
 **   Description: see the header file 
 *******************************************************************************/
-#include "sockspp/socks/socks_resp_parser.h"
+#include "proxypp/socks/socks_resp_parser.h"
 #include "nul/log.hpp"
 #include "uvcpp.h"
 
-namespace sockspp {
+namespace proxypp {
 
   bool SocksRespParser::parse(const char *buf, std::size_t len) {
     if (state_ == State::METHOD_IDENTIFICATION) {
@@ -126,4 +126,4 @@ namespace sockspp {
     return state_;
   }
 
-} /* end of namspace: sockspp */
+} /* end of namspace: proxypp */

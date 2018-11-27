@@ -9,7 +9,7 @@
 #include <fstream>
 #include <sstream>
 
-namespace sockspp {
+namespace proxypp {
 
   ProxyRuleManager::ProxyRuleManager(ProxyRuleManager::Mode mode) :
     mode_(mode) {
@@ -70,4 +70,4 @@ namespace sockspp {
     mode_ = mode;
   }
   
-} /* end of namspace: sockspp */
+} /* end of namspace: proxypp */

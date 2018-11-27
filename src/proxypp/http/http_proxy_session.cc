@@ -4,10 +4,10 @@
 ** Creation Time: 2018-07-25 Wed 06:05 PM
 **   Description: see the header file 
 *******************************************************************************/
-#include "sockspp/http/http_proxy_session.h"
+#include "proxypp/http/http_proxy_session.h"
 #include "nul/log.hpp"
 #include "nul/util.hpp"
-#include "sockspp/http/http_header_parser.h"
+#include "proxypp/http/http_header_parser.h"
 
 #include <algorithm>
 #include <cstring>
@@ -21,7 +21,7 @@ namespace {
     std::string{"HTTP/1.1 200 OK\r\n\r\n"};
 }
 
-namespace sockspp {
+namespace proxypp {
   HttpProxySession::HttpProxySession(
     std::unique_ptr<uvcpp::Tcp> &&conn,
     const std::shared_ptr<nul::BufferPool> &bufferPool) :
@@ -281,4 +281,4 @@ namespace sockspp {
     const std::shared_ptr<ProxyRuleManager> &proxyRuleManager) {
     proxyRuleManager_ = proxyRuleManager;
   }
-} /* end of namspace: sockspp */
+} /* end of namspace: proxypp */

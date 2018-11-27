@@ -4,7 +4,7 @@
 ** Creation Time: 2018-07-25 Wed 06:05 PM
 **   Description: see the header file 
 *******************************************************************************/
-#include "sockspp/socks/socks_proxy_session.h"
+#include "proxypp/socks/socks_proxy_session.h"
 #include "nul/log.hpp"
 
 #include <algorithm>
@@ -15,7 +15,7 @@ namespace {
   #define SOCKS_ERROR_REPLY_LENGTH 10
 }
 
-namespace sockspp {
+namespace proxypp {
   SocksProxySession::SocksProxySession(std::unique_ptr<uvcpp::Tcp> &&conn,
                  const std::shared_ptr<nul::BufferPool> &bufferPool) :
     downstreamConn_(std::move(conn)), bufferPool_(bufferPool) {
@@ -262,4 +262,4 @@ namespace sockspp {
   void SocksProxySession::setPassword(const std::string &password) {
     password_ = password;
   }
-} /* end of namspace: sockspp */
+} /* end of namspace: proxypp */

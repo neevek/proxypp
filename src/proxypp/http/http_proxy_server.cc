@@ -4,25 +4,25 @@
 ** Creation Time: 2018-08-22 Wed 10:12 AM
 **   Description: see the header file 
 *******************************************************************************/
-#include "sockspp/http/http_proxy_server.h"
-#include "sockspp/http/http_proxy_session.h"
-#include "sockspp/proxy_server.hpp"
-#include "sockspp/upstream_type.h"
+#include "proxypp/http/http_proxy_server.h"
+#include "proxypp/http/http_proxy_session.h"
+#include "proxypp/proxy_server.hpp"
+#include "proxypp/upstream_type.h"
 #include "nul/uri.hpp"
 #include <cassert>
 
 namespace {
   struct HttpProxyServerContext {
-    sockspp::ProxyServer server;
-    sockspp::UpstreamType upstreamType{sockspp::UpstreamType::kUnknown};
+    proxypp::ProxyServer server;
+    proxypp::UpstreamType upstreamType{proxypp::UpstreamType::kUnknown};
     std::string upstreamServerHost;
     uint16_t upstreamServerPort;
     bool proxyRuleMode;
-    std::shared_ptr<sockspp::ProxyRuleManager> proxyRuleManager{nullptr};
+    std::shared_ptr<proxypp::ProxyRuleManager> proxyRuleManager{nullptr};
   };
 }
 
-namespace sockspp {
+namespace proxypp {
   HttpProxyServer::HttpProxyServer() : ctx_(new HttpProxyServerContext()) {
   }
 
@@ -120,13 +120,13 @@ namespace sockspp {
     if (ctx->proxyRuleManager) {
       ctx->proxyRuleManager->setProxyRulesMode(
         blackListMode ?
-        sockspp::ProxyRuleManager::Mode::kBlackList :
-        sockspp::ProxyRuleManager::Mode::kWhiteList);
+        proxypp::ProxyRuleManager::Mode::kBlackList :
+        proxypp::ProxyRuleManager::Mode::kWhiteList);
     } else {
-      ctx->proxyRuleManager = std::make_shared<sockspp::ProxyRuleManager>(
+      ctx->proxyRuleManager = std::make_shared<proxypp::ProxyRuleManager>(
         blackListMode ?
-        sockspp::ProxyRuleManager::Mode::kBlackList :
-        sockspp::ProxyRuleManager::Mode::kWhiteList);
+        proxypp::ProxyRuleManager::Mode::kBlackList :
+        proxypp::ProxyRuleManager::Mode::kWhiteList);
     }
   }
 
@@ -152,10 +152,10 @@ namespace sockspp {
     ctx->proxyRuleManager->addProxyRulesWithString(proxyRulesString);
   }
 
-} /* end of namspace: sockspp */
+} /* end of namspace: proxypp */
 
 #ifdef BUILD_CLIENT 
-#include "sockspp/cli/cmdline.h"
+#include "proxypp/cli/cmdline.h"
 
 int main(int argc, char *argv[]) {
   cmdline::parser p;
@@ -172,7 +172,7 @@ int main(int argc, char *argv[]) {
 
   p.parse_check(argc, argv);
 
-  sockspp::HttpProxyServer d{};
+  proxypp::HttpProxyServer d{};
   auto upstreamServer = p.get<std::string>("upstream_server");
   if (!upstreamServer.empty()) {
     d.setUpstreamServer(upstreamServer);

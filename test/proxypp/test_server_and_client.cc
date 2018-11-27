@@ -1,10 +1,10 @@
 #include <gtest/gtest.h>
-#include "sockspp/socks/socks_client.h"
-#include "sockspp/socks/socks_proxy_session.h"
-#include "sockspp/proxy_server.hpp"
+#include "proxypp/socks/socks_client.h"
+#include "proxypp/socks/socks_proxy_session.h"
+#include "proxypp/proxy_server.hpp"
 #include "nul/util.hpp"
 
-using namespace sockspp;
+using namespace proxypp;
 
 TEST(SocksTest, ProtocolTest) {
   auto loop = std::make_shared<uvcpp::Loop>();
