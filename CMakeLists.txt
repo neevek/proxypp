@@ -19,7 +19,7 @@ if(NOT BUILD_RELEASE)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLOG_VERBOSE -g")
 else()
   message("Building for release")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLOG_DEBUG -Os")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLOG_ERROR -Os")
 endif()
 
 find_package(Threads REQUIRED)
