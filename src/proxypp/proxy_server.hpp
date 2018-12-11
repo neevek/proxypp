@@ -40,7 +40,7 @@ namespace proxypp {
           return false;
         }
 
-        bufferPool_ = std::make_shared<nul::BufferPool>(300, 60);
+        bufferPool_ = std::make_shared<nul::BufferPool>(8192, 20);
         server_ = uvcpp::Tcp::createUnique(loop, uvcpp::Tcp::Domain::INET);
 
         int on = 1;
