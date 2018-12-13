@@ -10,10 +10,6 @@
 #include "nul/uri.hpp"
 #include <algorithm>
 
-namespace {
-  static const std::string HTTP_HEADER_PROXY_CONNECTION = "Proxy-Connection";
-}
-
 namespace proxypp {
   using su = nul::StringUtil;
 
@@ -24,12 +20,6 @@ namespace proxypp {
     }
 
     requestData_.assign(buf, len);
-    auto pos = requestData_.find(HTTP_HEADER_PROXY_CONNECTION);
-    if (pos != std::string::npos) {
-      requestData_ = requestData_.replace(
-        pos, HTTP_HEADER_PROXY_CONNECTION.length(), "Connection");
-    }
-
     std::string header;
     if ((buf[len - 4] != '\r') ||
         (buf[len - 3] != '\n') ||

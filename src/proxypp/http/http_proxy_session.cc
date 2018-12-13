@@ -19,6 +19,8 @@ namespace {
     std::string{"HTTP/1.1 502 Bad Gateway\r\n\r\n"};
   static const auto REPLY_OK_FOR_CONNECT_REQUEST =
     std::string{"HTTP/1.1 200 OK\r\n\r\n"};
+  static const auto HTTP_HEADER_PROXY_CONNECTION =
+    std::string{"Proxy-Connection"};
 }
 
 namespace proxypp {
@@ -252,6 +254,12 @@ namespace proxypp {
     upstreamConnected_ = true;
 
     if (!requestData_.empty()) {
+      auto pos = requestData_.find(HTTP_HEADER_PROXY_CONNECTION);
+      if (pos != std::string::npos) {
+        requestData_ = requestData_.replace(
+          pos, HTTP_HEADER_PROXY_CONNECTION.length(), "Connection");
+      }
+
       conn.writeAsync(bufferPool_->assembleDataBuffer(
           requestData_.c_str(), requestData_.length()));
       requestData_.clear();
