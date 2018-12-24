@@ -152,6 +152,36 @@ namespace proxypp {
     ctx->proxyRuleManager->addProxyRulesWithString(proxyRulesString);
   }
 
+  void HttpProxyServer::addProxyRule(const std::string &regexStr) {
+    assert(ctx_);
+
+    auto ctx = reinterpret_cast<HttpProxyServerContext *>(ctx_);
+    if (!ctx->proxyRuleManager) {
+      setProxyRulesMode(false);
+    }
+    ctx->proxyRuleManager->addProxyRule(regexStr);
+  }
+
+  void HttpProxyServer::addIgnoreRulesWithFile(
+    const std::string &ignoreRulesFile) {
+    assert(ctx_);
+    reinterpret_cast<HttpProxyServerContext *>(ctx_)->proxyRuleManager->
+      addIgnoreRulesWithFile(ignoreRulesFile);
+  }
+
+  void HttpProxyServer::addIgnoreRulesWithString(
+    const std::string &ignoreRulesString) {
+    assert(ctx_);
+    reinterpret_cast<HttpProxyServerContext *>(ctx_)->proxyRuleManager->
+      addIgnoreRulesWithString(ignoreRulesString);
+  }
+
+  void HttpProxyServer::addIgnoreRule(const std::string &regexStr) {
+    assert(ctx_);
+    reinterpret_cast<HttpProxyServerContext *>(ctx_)->proxyRuleManager->
+      addIgnoreRule(regexStr);
+  }
+
 } /* end of namspace: proxypp */
 
 #ifdef BUILD_CLIENT 
@@ -178,12 +208,14 @@ int main(int argc, char *argv[]) {
     d.setUpstreamServer(upstreamServer);
   }
 
-  auto proxyRulesFile = p.get<std::string>("proxy_rules_file");
-  if (!proxyRulesFile.empty()) {
-    d.setProxyRulesMode(p.exist("proxy_rules_mode"));
-    d.addProxyRulesWithFile(proxyRulesFile);
-    //d.addProxyRulesWithString("(?:.+\\.)?google\\.com\n(?:.+\\.)?youtube\\.com");
-  }
+  //d.setProxyRulesMode(p.exist("proxy_rules_mode"));
+  //d.addProxyRulesWithString("(?:.+\\.)?google\\.com\n(?:.+\\.)?youtube\\.com");
+  //d.addIgnoreRule("(?:.+\\.)?google\\.com");
+
+  //auto proxyRulesFile = p.get<std::string>("proxy_rules_file");
+  //if (!proxyRulesFile.empty()) {
+    //d.addProxyRulesWithFile(proxyRulesFile);
+  //}
 
   d.start(
     p.get<std::string>("host"),
