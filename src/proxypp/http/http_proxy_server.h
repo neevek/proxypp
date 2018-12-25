@@ -36,10 +36,12 @@ namespace proxypp {
       void addProxyRulesWithFile(const std::string &proxyRulesFile);
       void addProxyRulesWithString(const std::string &proxyRulesString);
       void addProxyRule(const std::string &regexStr);
+      void removeProxyRule(const std::string &regexStr);
 
       void addIgnoreRulesWithFile(const std::string &ignoreRulesFile);
       void addIgnoreRulesWithString(const std::string &ignoreRulesString);
       void addIgnoreRule(const std::string &regexStr);
+      void removeIgnoreRule(const std::string &regexStr);
     
     private:
       void *ctx_{nullptr};

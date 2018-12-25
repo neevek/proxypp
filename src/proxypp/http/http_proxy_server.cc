@@ -162,6 +162,12 @@ namespace proxypp {
     ctx->proxyRuleManager->addProxyRule(regexStr);
   }
 
+  void HttpProxyServer::removeProxyRule(const std::string &regexStr) {
+    assert(ctx_);
+    reinterpret_cast<HttpProxyServerContext *>(ctx_)->proxyRuleManager->
+      removeProxyRule(regexStr);
+  }
+
   void HttpProxyServer::addIgnoreRulesWithFile(
     const std::string &ignoreRulesFile) {
     assert(ctx_);
@@ -180,6 +186,12 @@ namespace proxypp {
     assert(ctx_);
     reinterpret_cast<HttpProxyServerContext *>(ctx_)->proxyRuleManager->
       addIgnoreRule(regexStr);
+  }
+
+  void HttpProxyServer::removeIgnoreRule(const std::string &regexStr) {
+    assert(ctx_);
+    reinterpret_cast<HttpProxyServerContext *>(ctx_)->proxyRuleManager->
+      removeIgnoreRule(regexStr);
   }
 
 } /* end of namspace: proxypp */
@@ -208,9 +220,9 @@ int main(int argc, char *argv[]) {
     d.setUpstreamServer(upstreamServer);
   }
 
-  //d.setProxyRulesMode(p.exist("proxy_rules_mode"));
-  //d.addProxyRulesWithString("(?:.+\\.)?google\\.com\n(?:.+\\.)?youtube\\.com");
-  //d.addIgnoreRule("(?:.+\\.)?google\\.com");
+  d.setProxyRulesMode(p.exist("proxy_rules_mode"));
+  d.addProxyRulesWithString("(?:.+\\.)?google\\.com\n(?:.+\\.)?youtube\\.com");
+  d.removeProxyRule("(?:.+\\.)?google\\.com");
 
   //auto proxyRulesFile = p.get<std::string>("proxy_rules_file");
   //if (!proxyRulesFile.empty()) {

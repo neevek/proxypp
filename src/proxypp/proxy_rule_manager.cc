@@ -49,7 +49,14 @@ namespace proxypp {
   }
 
   void ProxyRuleManager::addProxyRule(const std::string &regexStr) {
-    regexProxyRules_.emplace_back(regexStr);
+    regexProxyRules_[regexStr] = std::regex{regexStr};
+  }
+
+  void ProxyRuleManager::removeProxyRule(const std::string &regexStr) {
+    auto it = regexProxyRules_.find(regexStr);
+    if (it != regexProxyRules_.end()) {
+      regexProxyRules_.erase(it);
+    }
   }
 
   void ProxyRuleManager::addIgnoreRulesWithFile(
@@ -86,19 +93,26 @@ namespace proxypp {
   }
 
   void ProxyRuleManager::addIgnoreRule(const std::string &regexStr) {
-    regexIgnoreRules_.emplace_back(regexStr);
+    regexIgnoreRules_[regexStr] = std::regex{regexStr};
+  }
+
+  void ProxyRuleManager::removeIgnoreRule(const std::string &regexStr) {
+    auto it = regexIgnoreRules_.find(regexStr);
+    if (it != regexIgnoreRules_.end()) {
+      regexIgnoreRules_.erase(it);
+    }
   }
 
   bool ProxyRuleManager::shouldForwardToUpstream(const std::string &host) const {
     for (auto &r : regexIgnoreRules_) {
-      if (std::regex_match(host, r)) {
+      if (std::regex_match(host, r.second)) {
         return false;
       }
     }
 
     auto isWhiteListMode = mode_ == ProxyRuleManager::Mode::kWhiteList;
     for (auto &r : regexProxyRules_) {
-      if (std::regex_match(host, r)) {
+      if (std::regex_match(host, r.second)) {
         return isWhiteListMode;
       }
     }

@@ -9,6 +9,7 @@
 #ifndef PROXYPP_PROXY_RULE_MANAGER_H_
 #define PROXYPP_PROXY_RULE_MANAGER_H_
 #include <vector>
+#include <map>
 #include <regex>
 
 namespace proxypp {
@@ -25,18 +26,20 @@ namespace proxypp {
       void addProxyRulesWithFile(const std::string &proxyRulesFile);
       void addProxyRulesWithString(const std::string &proxyRulesString);
       void addProxyRule(const std::string &regexStr);
+      void removeProxyRule(const std::string &regexStr);
 
       void addIgnoreRulesWithFile(const std::string &ingoreRulesFile);
       void addIgnoreRulesWithString(const std::string &ingoreRulesString);
       void addIgnoreRule(const std::string &regexStr);
+      void removeIgnoreRule(const std::string &regexStr);
 
       bool shouldForwardToUpstream(const std::string &host) const;
       Mode getMode() const;
       void setProxyRulesMode(Mode mode);
     
     private:
-      std::vector<std::regex> regexProxyRules_;
-      std::vector<std::regex> regexIgnoreRules_;
+      std::map<std::string, std::regex> regexProxyRules_;
+      std::map<std::string, std::regex> regexIgnoreRules_;
       Mode mode_;
   };
 } /* end of namspace: proxypp */
