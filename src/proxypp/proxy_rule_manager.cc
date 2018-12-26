@@ -59,6 +59,10 @@ namespace proxypp {
     }
   }
 
+  void ProxyRuleManager::clearProxyRules() {
+    regexProxyRules_.clear();
+  }
+
   void ProxyRuleManager::addIgnoreRulesWithFile(
     const std::string &ignoreRulesFile) {
     auto f = std::ifstream(ignoreRulesFile, std::ios::in);
@@ -101,6 +105,10 @@ namespace proxypp {
     if (it != regexIgnoreRules_.end()) {
       regexIgnoreRules_.erase(it);
     }
+  }
+
+  void ProxyRuleManager::clearIgnoreRules() {
+    regexIgnoreRules_.clear();
   }
 
   bool ProxyRuleManager::shouldForwardToUpstream(const std::string &host) const {

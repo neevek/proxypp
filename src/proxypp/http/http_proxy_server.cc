@@ -168,6 +168,12 @@ namespace proxypp {
       removeProxyRule(regexStr);
   }
 
+  void HttpProxyServer::clearProxyRules() {
+    assert(ctx_);
+    reinterpret_cast<HttpProxyServerContext *>(ctx_)->proxyRuleManager->
+      clearProxyRules();
+  }
+
   void HttpProxyServer::addIgnoreRulesWithFile(
     const std::string &ignoreRulesFile) {
     assert(ctx_);
@@ -192,6 +198,12 @@ namespace proxypp {
     assert(ctx_);
     reinterpret_cast<HttpProxyServerContext *>(ctx_)->proxyRuleManager->
       removeIgnoreRule(regexStr);
+  }
+
+  void HttpProxyServer::clearIgnoreRules() {
+    assert(ctx_);
+    reinterpret_cast<HttpProxyServerContext *>(ctx_)->proxyRuleManager->
+      clearIgnoreRules();
   }
 
 } /* end of namspace: proxypp */
