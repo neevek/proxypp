@@ -27,7 +27,8 @@ find_package(Threads REQUIRED)
 include(ExternalProject)
 ExternalProject_Add(uvcpp
   PREFIX "${CMAKE_BINARY_DIR}/deps"
-  GIT_REPOSITORY "$ENV{HOME}/dev/github/uvcpp"
+  GIT_REPOSITORY "https://github.com/neevek/uvcpp"
+  #GIT_REPOSITORY "$ENV{HOME}/dev/github/uvcpp"
   GIT_TAG "master"
   CMAKE_ARGS -DCMAKE_ANDROID_STANDALONE_TOOLCHAIN=${CMAKE_ANDROID_STANDALONE_TOOLCHAIN}
   #UPDATE_COMMAND ""
