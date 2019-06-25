@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 set(CMAKE_CXX_FLAGS "-Wall -std=c++14 -fexceptions -frtti -DLOG_TAG_NAME='\"TR\"'")
-if(CMAKE_ANDROID_STANDALONE_TOOLCHAIN)
+if(CMAKE_ANDROID_NDK)
   message("Building shared proxypp library for Android...")
 
   set(BUILD_SHARED_LIBRARY TRUE)
@@ -30,7 +30,7 @@ ExternalProject_Add(uvcpp
   GIT_REPOSITORY "https://github.com/neevek/uvcpp"
   #GIT_REPOSITORY "$ENV{HOME}/dev/github/uvcpp"
   GIT_TAG "master"
-  CMAKE_ARGS -DCMAKE_ANDROID_STANDALONE_TOOLCHAIN=${CMAKE_ANDROID_STANDALONE_TOOLCHAIN}
+  CMAKE_ARGS -DCMAKE_ANDROID_NDK=${CMAKE_ANDROID_NDK}
   #UPDATE_COMMAND ""
   INSTALL_COMMAND ""
   TEST_COMMAND ""
@@ -56,7 +56,7 @@ include_directories(
   ) 
 
 set(LINK_LIBS uv)
-if(CMAKE_ANDROID_STANDALONE_TOOLCHAIN)
+if(CMAKE_ANDROID_NDK)
   set(LINK_LIBS ${LINK_LIBS} log)
 endif()
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
