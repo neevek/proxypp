@@ -20,7 +20,7 @@ namespace proxypp {
     public ProxySession, public std::enable_shared_from_this<SocksProxySession> {
     public:
       SocksProxySession(
-        std::unique_ptr<uvcpp::Tcp> &&conn,
+        const std::shared_ptr<uvcpp::Tcp> &conn,
         const std::shared_ptr<nul::BufferPool> &bufferPool);
       virtual void start() override;
       virtual void close() override;
@@ -35,9 +35,9 @@ namespace proxypp {
       void createUpstreamConnection();
     
     private:
-      std::unique_ptr<uvcpp::Tcp> downstreamConn_{nullptr};
-      std::shared_ptr<uvcpp::Tcp> upstreamConn_{nullptr};
-      std::unique_ptr<uvcpp::DNSRequest> dnsRequest_{nullptr};
+      std::shared_ptr<uvcpp::Tcp> downstreamConn_;
+      std::shared_ptr<uvcpp::Tcp> upstreamConn_;
+      std::shared_ptr<uvcpp::DNSRequest> dnsRequest_;
       uvcpp::EvDNSResult::DNSResultVector ipAddrs_;
       decltype(ipAddrs_.begin()) ipIt_{ipAddrs_.end()};
       bool upstreamConnected_{false};

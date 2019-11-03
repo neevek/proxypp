@@ -16,8 +16,9 @@ namespace {
 }
 
 namespace proxypp {
-  SocksProxySession::SocksProxySession(std::unique_ptr<uvcpp::Tcp> &&conn,
-                 const std::shared_ptr<nul::BufferPool> &bufferPool) :
+  SocksProxySession::SocksProxySession(
+    const std::shared_ptr<uvcpp::Tcp> &conn,
+    const std::shared_ptr<nul::BufferPool> &bufferPool) :
     downstreamConn_(std::move(conn)), bufferPool_(bufferPool) {
   }
 
@@ -116,7 +117,7 @@ namespace proxypp {
       connectUpstream(reinterpret_cast<uvcpp::SockAddr *>(&addr6));
 
     } else {
-      dnsRequest_ = uvcpp::DNSRequest::createUnique(downstreamConn_->getLoop());
+      dnsRequest_ = uvcpp::DNSRequest::create(downstreamConn_->getLoop());
       dnsRequest_->once<uvcpp::EvDNSRequestFinish>(
         // intentionally cycle-ref the SocksProxySession object to avoid
         // deletion of it before this callback is fired
@@ -174,7 +175,7 @@ namespace proxypp {
   }
 
   void SocksProxySession::createUpstreamConnection() {
-    upstreamConn_ = uvcpp::Tcp::createShared(downstreamConn_->getLoop());
+    upstreamConn_ = uvcpp::Tcp::create(downstreamConn_->getLoop());
     upstreamConn_->once<uvcpp::EvError>(
       [this](const auto &e, auto &client) {
         if (!upstreamConnected_) {

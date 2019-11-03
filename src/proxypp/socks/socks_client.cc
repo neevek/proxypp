@@ -13,7 +13,7 @@ namespace proxypp {
   SocksClient::SocksClient(
     const std::shared_ptr<uvcpp::Loop> &loop,
     std::shared_ptr<nul::BufferPool> bufferPool) :
-    conn_(uvcpp::Tcp::createUnique(loop)),
+    conn_(uvcpp::Tcp::create(loop)),
     bufferPool_(bufferPool) {
   }
 

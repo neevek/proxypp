@@ -32,8 +32,9 @@ namespace proxypp {
     }
 
     auto ctx = reinterpret_cast<SocksProxyServerContext *>(ctx_);
-    ctx->server.setSessionCreator([ctx](std::unique_ptr<uvcpp::Tcp> &&conn,
-       const std::shared_ptr<nul::BufferPool> &bufferPool) {
+    ctx->server.setSessionCreator([ctx](
+        const std::shared_ptr<uvcpp::Tcp> &conn,
+        const std::shared_ptr<nul::BufferPool> &bufferPool) {
       auto sess = std::make_shared<SocksProxySession>(std::move(conn), bufferPool);
       sess->setUsername(ctx->username);
       sess->setPassword(ctx->password);

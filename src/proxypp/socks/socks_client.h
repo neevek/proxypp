@@ -55,8 +55,8 @@ namespace proxypp {
       void sendSocksRequest(const std::string &targetHost, uint16_t targetPort);
     
     private:
-      std::unique_ptr<uvcpp::Tcp> conn_{nullptr};
-      std::shared_ptr<nul::BufferPool> bufferPool_{nullptr};
+      std::shared_ptr<uvcpp::Tcp> conn_;
+      std::shared_ptr<nul::BufferPool> bufferPool_;
       std::string username_;
       std::string password_;
 

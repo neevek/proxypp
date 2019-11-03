@@ -25,7 +25,7 @@ namespace {
 
 namespace proxypp {
   HttpProxySession::HttpProxySession(
-    std::unique_ptr<uvcpp::Tcp> &&conn,
+    const std::shared_ptr<uvcpp::Tcp> &conn,
     const std::shared_ptr<nul::BufferPool> &bufferPool) :
     downstreamConn_(std::move(conn)), bufferPool_(bufferPool) {
   }
@@ -159,7 +159,7 @@ namespace proxypp {
       return;
     }
 
-    dnsRequest_ = uvcpp::DNSRequest::createUnique(downstreamConn_->getLoop());
+    dnsRequest_ = uvcpp::DNSRequest::create(downstreamConn_->getLoop());
     dnsRequest_->once<uvcpp::EvDNSRequestFinish>(
       // intentionally cycle-ref the HttpProxySession object to avoid
       // deletion of it before this callback is fired
@@ -209,7 +209,7 @@ namespace proxypp {
   }
 
   void HttpProxySession::createUpstreamConnection(uint16_t port) {
-    upstreamConn_ = uvcpp::Tcp::createShared(downstreamConn_->getLoop());
+    upstreamConn_ = uvcpp::Tcp::create(downstreamConn_->getLoop());
     upstreamConn_->once<uvcpp::EvError>(
       [this](const auto &e, auto &client) {
         if (!upstreamConnected_) {

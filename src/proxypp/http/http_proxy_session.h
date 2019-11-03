@@ -23,7 +23,7 @@ namespace proxypp {
 
     public:
       HttpProxySession(
-        std::unique_ptr<uvcpp::Tcp> &&conn,
+        const std::shared_ptr<uvcpp::Tcp> &conn,
         const std::shared_ptr<nul::BufferPool> &bufferPool);
       virtual void start() override;
       virtual void close() override;
@@ -46,9 +46,9 @@ namespace proxypp {
         const std::string &targetServerAddr, uint16_t targetServerPort);
     
     private:
-      std::unique_ptr<uvcpp::Tcp> downstreamConn_{nullptr};
-      std::shared_ptr<uvcpp::Tcp> upstreamConn_{nullptr};
-      std::unique_ptr<uvcpp::DNSRequest> dnsRequest_{nullptr};
+      std::shared_ptr<uvcpp::Tcp> downstreamConn_;
+      std::shared_ptr<uvcpp::Tcp> upstreamConn_;
+      std::shared_ptr<uvcpp::DNSRequest> dnsRequest_;
       uvcpp::EvDNSResult::DNSResultVector ipAddrs_;
       decltype(ipAddrs_.begin()) ipIt_{ipAddrs_.end()};
       bool upstreamConnected_{false};
@@ -57,7 +57,7 @@ namespace proxypp {
 
       std::string requestData_;
 
-      std::unique_ptr<SocksClient> socksClient_{nullptr};
+      std::unique_ptr<SocksClient> socksClient_;
       UpstreamType upstreamType_{UpstreamType::kUnknown};
       std::string upstreamServerHost_;
       uint16_t upstreamServerPort_{0};

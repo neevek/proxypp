@@ -39,7 +39,7 @@ namespace proxypp {
 
     auto ctx = reinterpret_cast<HttpProxyServerContext *>(ctx_);
     ctx->server.setSessionCreator(
-      [ctx](std::unique_ptr<uvcpp::Tcp> &&conn,
+      [ctx](const std::shared_ptr<uvcpp::Tcp> &conn,
          const std::shared_ptr<nul::BufferPool> &bufferPool) {
         auto sess =
           std::make_shared<HttpProxySession>(std::move(conn), bufferPool);

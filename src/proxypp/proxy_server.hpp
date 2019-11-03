@@ -18,7 +18,7 @@ namespace proxypp {
   class ProxyServer final {
     public:
       using SessionCreator = std::function<std::shared_ptr<ProxySession>(
-        std::unique_ptr<uvcpp::Tcp> &&conn,
+        const std::shared_ptr<uvcpp::Tcp> &conn,
         const std::shared_ptr<nul::BufferPool> &bufferPool)>;
 
       enum class ServerStatus {
@@ -41,7 +41,7 @@ namespace proxypp {
         }
 
         bufferPool_ = std::make_shared<nul::BufferPool>(8192, 20);
-        server_ = uvcpp::Tcp::createUnique(loop, uvcpp::Tcp::Domain::INET);
+        server_ = uvcpp::Tcp::create(loop, uvcpp::Tcp::Domain::INET);
 
         int on = 1;
         server_->setSockOption(
@@ -84,7 +84,7 @@ namespace proxypp {
       void shutdown() {
         if (server_) {
           // must shutdown the Server from inside the loop
-          auto work = uvcpp::Work::createShared(server_->getLoop());
+          auto work = uvcpp::Work::create(server_->getLoop());
           work->once<uvcpp::EvAfterWork>(
             [this, _ = work](const auto &e, auto &work) {
             server_->close();
@@ -111,7 +111,7 @@ namespace proxypp {
       }
 
     private:
-      void onClientConnected(std::unique_ptr<uvcpp::Tcp> conn) {
+      void onClientConnected(const std::shared_ptr<uvcpp::Tcp> &&conn) {
         auto sessionId = getNextSessionId();
         conn->on<uvcpp::EvClose>([this, sessionId](const auto &e, auto &conn) {
           this->removeSession(sessionId);
@@ -138,13 +138,13 @@ namespace proxypp {
       }
 
     private:
-      std::unique_ptr<uvcpp::Tcp> server_{nullptr};
-      std::shared_ptr<nul::BufferPool> bufferPool_{nullptr};
+      std::shared_ptr<uvcpp::Tcp> server_;
+      std::shared_ptr<nul::BufferPool> bufferPool_;
       std::map<SessionId, std::shared_ptr<ProxySession>> sessions_;
       EventCallback eventCallback_{nullptr};
       SessionId sessionId{0};
 
-      SessionCreator createSession_{nullptr};
+      SessionCreator createSession_;
   };
 } /* end of namspace: proxypp */
 
