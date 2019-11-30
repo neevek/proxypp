@@ -10,6 +10,7 @@
 #include "proxypp/upstream_type.h"
 #include "nul/uri.hpp"
 #include <cassert>
+#include <signal.h>
 
 namespace {
   struct HttpProxyServerContext {
@@ -240,6 +241,8 @@ int main(int argc, char *argv[]) {
   //if (!proxyRulesFile.empty()) {
     //d.addProxyRulesWithFile(proxyRulesFile);
   //}
+
+  signal(SIGPIPE, [](int){ /* ignore sigpipe */ });
 
   d.start(
     p.get<std::string>("host"),

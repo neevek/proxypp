@@ -7,6 +7,7 @@
 #include "proxypp/socks/socks_proxy_server.h"
 #include "proxypp/socks/socks_proxy_session.h"
 #include "proxypp/proxy_server.hpp"
+#include <signal.h>
 
 namespace {
   struct SocksProxyServerContext {
@@ -102,6 +103,9 @@ int main(int argc, char *argv[]) {
   proxypp::SocksProxyServer s{};
   s.setUsername(p.get<std::string>("username"));
   s.setPassword(p.get<std::string>("password"));
+
+  signal(SIGPIPE, [](int){ /* ignore sigpipe */ });
+
   s.start(
     p.get<std::string>("host"),
     p.get<uint16_t>("port"),
