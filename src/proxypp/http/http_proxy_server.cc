@@ -7,6 +7,7 @@
 #include "proxypp/http/http_proxy_server.h"
 #include "proxypp/http/http_proxy_session.h"
 #include "proxypp/proxy_server.hpp"
+#include "proxypp/auto_proxy_manager.h"
 #include "proxypp/upstream_type.h"
 #include "nul/uri.hpp"
 #include <cassert>
@@ -19,7 +20,7 @@ namespace {
     std::string upstreamServerHost;
     uint16_t upstreamServerPort;
     bool proxyRuleMode;
-    std::shared_ptr<proxypp::ProxyRuleManager> proxyRuleManager{nullptr};
+    std::shared_ptr<proxypp::AutoProxyManager> autoProxyManager{nullptr};
   };
 }
 
@@ -46,7 +47,7 @@ namespace proxypp {
           std::make_shared<HttpProxySession>(std::move(conn), bufferPool);
         sess->setUpstreamServer(
           ctx->upstreamType, ctx->upstreamServerHost, ctx->upstreamServerPort);
-        sess->setProxyRuleManager(ctx->proxyRuleManager);
+        sess->setAutoProxyManager(ctx->autoProxyManager);
         return sess;
       });
 
@@ -79,132 +80,80 @@ namespace proxypp {
   }
 
   void HttpProxyServer::setUpstreamServer(const std::string &uriStr) {
-    if (ctx_) {
-      auto ctx = reinterpret_cast<HttpProxyServerContext *>(ctx_);
-      nul::URI uri;
-      if (!uri.parse(uriStr)) {
-        LOG_W("Invalid upstream server ignored: %s", uriStr.c_str());
-        return;
-      }
-      auto scheme = uri.getScheme();
-      if (scheme == "socks5") {
-        ctx->upstreamType = UpstreamType::kSOCKS5;
-
-      } else if (scheme == "http" || scheme == "https") {
-        ctx->upstreamType = UpstreamType::kHTTP;
-
-      } else {
-        LOG_W("Only 'socks5' or 'http' proxy server is support for upstream");
-        return;
-      }
-
-      ctx->upstreamServerHost = uri.getHost();
-      ctx->upstreamServerPort = uri.getPort();
-
-      if (ctx->upstreamServerHost.empty()) {
-        LOG_W("Invalid upstream server ignored: %s", uriStr.c_str());
-        ctx->upstreamType = UpstreamType::kUnknown;
-        return;
-      }
-
-      if (ctx->upstreamServerPort == 0) {
-        LOG_W("Invalid upstream server port: %d", ctx->upstreamServerPort);
-        ctx->upstreamType = UpstreamType::kUnknown;
-        return;
-      }
+    if (!ctx_) {
+      return;
     }
-  }
 
-  void HttpProxyServer::setProxyRulesMode(bool blackListMode) {
-    assert(ctx_);
     auto ctx = reinterpret_cast<HttpProxyServerContext *>(ctx_);
-    if (ctx->proxyRuleManager) {
-      ctx->proxyRuleManager->setProxyRulesMode(
-        blackListMode ?
-        proxypp::ProxyRuleManager::Mode::kBlackList :
-        proxypp::ProxyRuleManager::Mode::kWhiteList);
-    } else {
-      ctx->proxyRuleManager = std::make_shared<proxypp::ProxyRuleManager>(
-        blackListMode ?
-        proxypp::ProxyRuleManager::Mode::kBlackList :
-        proxypp::ProxyRuleManager::Mode::kWhiteList);
+    nul::URI uri;
+    if (!uri.parse(uriStr)) {
+      LOG_W("Invalid upstream server ignored: %s", uriStr.c_str());
+      return;
     }
+    auto scheme = uri.getScheme();
+    if (scheme == "socks5") {
+      ctx->upstreamType = UpstreamType::kSOCKS5;
+
+    } else if (scheme == "http" || scheme == "https") {
+      ctx->upstreamType = UpstreamType::kHTTP;
+
+    } else {
+      LOG_W("Only 'socks5' or 'http' proxy server is support for upstream");
+      return;
+    }
+
+    ctx->upstreamServerHost = uri.getHost();
+    ctx->upstreamServerPort = uri.getPort();
+
+    if (ctx->upstreamServerHost.empty()) {
+      LOG_W("Invalid upstream server ignored: %s", uriStr.c_str());
+      ctx->upstreamType = UpstreamType::kUnknown;
+      return;
+    }
+
+    if (ctx->upstreamServerPort == 0) {
+      LOG_W("Invalid upstream server port: %d", ctx->upstreamServerPort);
+      ctx->upstreamType = UpstreamType::kUnknown;
+      return;
+    }
+
+    LOG_I("set upstream server: %s:%d",
+          ctx->upstreamServerHost.c_str(), ctx->upstreamServerPort);
   }
 
-  void HttpProxyServer::addProxyRulesWithFile(
+  std::size_t HttpProxyServer::addAutoProxyRulesFile(
     const std::string &proxyRulesFile) {
     assert(ctx_);
 
     auto ctx = reinterpret_cast<HttpProxyServerContext *>(ctx_);
-    if (!ctx->proxyRuleManager) {
-      setProxyRulesMode(false);
+    if (!ctx->autoProxyManager) {
+      ctx->autoProxyManager = std::make_shared<proxypp::AutoProxyManager>();
     }
-    ctx->proxyRuleManager->addProxyRulesWithFile(proxyRulesFile);
+    return ctx->autoProxyManager->parseFileAsRules(proxyRulesFile);
   }
 
-  void HttpProxyServer::addProxyRulesWithString(
-    const std::string &proxyRulesString) {
+  bool HttpProxyServer::addProxyRule(const std::string &rule) {
     assert(ctx_);
 
     auto ctx = reinterpret_cast<HttpProxyServerContext *>(ctx_);
-    if (!ctx->proxyRuleManager) {
-      setProxyRulesMode(false);
+    if (!ctx->autoProxyManager) {
+      ctx->autoProxyManager = std::make_shared<proxypp::AutoProxyManager>();
     }
-    ctx->proxyRuleManager->addProxyRulesWithString(proxyRulesString);
+    return ctx->autoProxyManager->addRule(rule);
   }
 
-  void HttpProxyServer::addProxyRule(const std::string &regexStr) {
+  bool HttpProxyServer::removeProxyRule(const std::string &rule) {
     assert(ctx_);
-
     auto ctx = reinterpret_cast<HttpProxyServerContext *>(ctx_);
-    if (!ctx->proxyRuleManager) {
-      setProxyRulesMode(false);
-    }
-    ctx->proxyRuleManager->addProxyRule(regexStr);
-  }
-
-  void HttpProxyServer::removeProxyRule(const std::string &regexStr) {
-    assert(ctx_);
-    reinterpret_cast<HttpProxyServerContext *>(ctx_)->proxyRuleManager->
-      removeProxyRule(regexStr);
+    return ctx->autoProxyManager && ctx->autoProxyManager->removeRule(rule);
   }
 
   void HttpProxyServer::clearProxyRules() {
     assert(ctx_);
-    reinterpret_cast<HttpProxyServerContext *>(ctx_)->proxyRuleManager->
-      clearProxyRules();
-  }
-
-  void HttpProxyServer::addIgnoreRulesWithFile(
-    const std::string &ignoreRulesFile) {
-    assert(ctx_);
-    reinterpret_cast<HttpProxyServerContext *>(ctx_)->proxyRuleManager->
-      addIgnoreRulesWithFile(ignoreRulesFile);
-  }
-
-  void HttpProxyServer::addIgnoreRulesWithString(
-    const std::string &ignoreRulesString) {
-    assert(ctx_);
-    reinterpret_cast<HttpProxyServerContext *>(ctx_)->proxyRuleManager->
-      addIgnoreRulesWithString(ignoreRulesString);
-  }
-
-  void HttpProxyServer::addIgnoreRule(const std::string &regexStr) {
-    assert(ctx_);
-    reinterpret_cast<HttpProxyServerContext *>(ctx_)->proxyRuleManager->
-      addIgnoreRule(regexStr);
-  }
-
-  void HttpProxyServer::removeIgnoreRule(const std::string &regexStr) {
-    assert(ctx_);
-    reinterpret_cast<HttpProxyServerContext *>(ctx_)->proxyRuleManager->
-      removeIgnoreRule(regexStr);
-  }
-
-  void HttpProxyServer::clearIgnoreRules() {
-    assert(ctx_);
-    reinterpret_cast<HttpProxyServerContext *>(ctx_)->proxyRuleManager->
-      clearIgnoreRules();
+    auto ctx = reinterpret_cast<HttpProxyServerContext *>(ctx_);
+    if (ctx->autoProxyManager) {
+      ctx->autoProxyManager->clearAll();
+    }
   }
 
 } /* end of namspace: proxypp */
@@ -222,25 +171,21 @@ int main(int argc, char *argv[]) {
   p.add<std::string>(
     "upstream_server", 'u', "e.g. socks5://127.0.0.1:1080", false);
   p.add<std::string>(
-    "proxy_rules_file", 'r', "regex proxy rules file, a rule for each line", false);
-  p.add("proxy_rules_mode", 'm', "false=white_list_mode, true=black_list_mode");
+    "proxy_rules_file", 'r', "auto proxy rule file", false);
 
   p.parse_check(argc, argv);
 
   proxypp::HttpProxyServer d{};
   auto upstreamServer = p.get<std::string>("upstream_server");
   if (!upstreamServer.empty()) {
+    LOG_I("start server");
     d.setUpstreamServer(upstreamServer);
   }
 
-  d.setProxyRulesMode(p.exist("proxy_rules_mode"));
-  d.addProxyRulesWithString("(?:.+\\.)?google\\.com\n(?:.+\\.)?youtube\\.com");
-  d.removeProxyRule("(?:.+\\.)?google\\.com");
-
-  //auto proxyRulesFile = p.get<std::string>("proxy_rules_file");
-  //if (!proxyRulesFile.empty()) {
-    //d.addProxyRulesWithFile(proxyRulesFile);
-  //}
+  auto proxyRulesFile = p.get<std::string>("proxy_rules_file");
+  if (!proxyRulesFile.empty()) {
+    d.addAutoProxyRulesFile(proxyRulesFile);
+  }
 
   signal(SIGPIPE, [](int){ /* ignore sigpipe */ });
 

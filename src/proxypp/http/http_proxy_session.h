@@ -9,7 +9,7 @@
 #define PROXYPP_HTTP_PROXY_SESSION_H_
 #include "proxypp/proxy_session.h"
 #include "proxypp/upstream_type.h"
-#include "proxypp/proxy_rule_manager.h"
+#include "proxypp/auto_proxy_manager.h"
 #include "proxypp/socks/socks_client.h"
 #include "uvcpp.h"
 #include "nul/buffer_pool.hpp"
@@ -30,8 +30,8 @@ namespace proxypp {
 
       void setUpstreamServer(
         UpstreamType type, const std::string &ip, uint16_t port);
-      void setProxyRuleManager(
-        const std::shared_ptr<ProxyRuleManager> &proxyRuleManager);
+      void setAutoProxyManager(
+        const std::shared_ptr<AutoProxyManager> &proxyRuleManager);
 
     private:
       void replyDownstream(const std::string &message);
@@ -61,7 +61,7 @@ namespace proxypp {
       UpstreamType upstreamType_{UpstreamType::kUnknown};
       std::string upstreamServerHost_;
       uint16_t upstreamServerPort_{0};
-      std::shared_ptr<ProxyRuleManager> proxyRuleManager_{nullptr};
+      std::shared_ptr<AutoProxyManager> proxyRuleManager_{nullptr};
   };
 } /* end of namspace: proxypp */
 

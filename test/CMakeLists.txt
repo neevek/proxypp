@@ -81,6 +81,7 @@ set(COMMON_SRCS
   ${PROXYPP_SRC_DIR}/proxypp/socks/socks_resp_parser.cc
   ${PROXYPP_SRC_DIR}/proxypp/socks/socks_client.cc
   ${PROXYPP_SRC_DIR}/proxypp/socks/socks_proxy_server.cc
+  ${PROXYPP_SRC_DIR}/proxypp/auto_proxy_manager.cc
   )
 set(COMMON_LINK_LIBS libgtest libgmock uv)
 
@@ -90,4 +91,5 @@ macro(ADD_PROXYPP_TEST TEST_NAME TEST_SOURCE)
   add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
 endmacro()
 
-ADD_PROXYPP_TEST(client proxypp/test_server_and_client.cc)
+#ADD_PROXYPP_TEST(client proxypp/test_server_and_client.cc)
+ADD_PROXYPP_TEST(proxy proxypp/test_auto_proxy_manager.cc)

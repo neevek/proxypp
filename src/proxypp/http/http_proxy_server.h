@@ -32,18 +32,10 @@ namespace proxypp {
       // http://127.0.0.1:8080
       void setUpstreamServer(const std::string &uriStr);
 
-      void setProxyRulesMode(bool blackListMode);
-      void addProxyRulesWithFile(const std::string &proxyRulesFile);
-      void addProxyRulesWithString(const std::string &proxyRulesString);
-      void addProxyRule(const std::string &regexStr);
-      void removeProxyRule(const std::string &regexStr);
+      std::size_t addAutoProxyRulesFile(const std::string &proxyRulesFile);
+      bool addProxyRule(const std::string &rule);
+      bool removeProxyRule(const std::string &rule);
       void clearProxyRules();
-
-      void addIgnoreRulesWithFile(const std::string &ignoreRulesFile);
-      void addIgnoreRulesWithString(const std::string &ignoreRulesString);
-      void addIgnoreRule(const std::string &regexStr);
-      void removeIgnoreRule(const std::string &regexStr);
-      void clearIgnoreRules();
     
     private:
       void *ctx_{nullptr};

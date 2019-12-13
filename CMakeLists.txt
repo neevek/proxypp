@@ -4,7 +4,7 @@ set(CMAKE_CXX_FLAGS "-Wall -std=c++14 -fexceptions -frtti -DLOG_TAG_NAME='\"TR\"
 if(CMAKE_ANDROID_NDK)
   message("Building shared proxypp library for Android...")
 
-  set(BUILD_SHARED_LIBRARY TRUE)
+  #set(BUILD_SHARED_LIBRARY TRUE)
 
   # for executable
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -fPIE")
@@ -77,7 +77,7 @@ set(HPD_SRCS
   src/proxypp/http/http_header_parser.cc
   src/proxypp/http/http_proxy_session.cc
   src/proxypp/http/http_proxy_server.cc
-  src/proxypp/proxy_rule_manager.cc
+  src/proxypp/auto_proxy_manager.cc
   )
 
 if(BUILD_SHARED_LIBRARY)

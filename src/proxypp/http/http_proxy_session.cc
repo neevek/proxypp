@@ -79,8 +79,7 @@ namespace proxypp {
         }
 
         if (upstreamType_ != UpstreamType::kUnknown &&
-            (!proxyRuleManager_ ||
-             proxyRuleManager_->shouldForwardToUpstream(addr))) {
+            (!proxyRuleManager_ || proxyRuleManager_->matches(addr, port))) {
 
           if (upstreamType_ == UpstreamType::kSOCKS5) {
             this->initiateSocksConnection(addr, port);
@@ -285,8 +284,8 @@ namespace proxypp {
     upstreamServerPort_ = port;
   }
 
-  void HttpProxySession::setProxyRuleManager(
-    const std::shared_ptr<ProxyRuleManager> &proxyRuleManager) {
+  void HttpProxySession::setAutoProxyManager(
+    const std::shared_ptr<AutoProxyManager> &proxyRuleManager) {
     proxyRuleManager_ = proxyRuleManager;
   }
 } /* end of namspace: proxypp */
