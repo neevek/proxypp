@@ -58,8 +58,7 @@ namespace proxypp {
 
       } else {
         auto colonIndex = part.find(":");
-        if (colonIndex == std::string::npos ||
-            colonIndex + 1 == part.length()) {
+        if (colonIndex == std::string::npos) {
           LOG_E("Invalid http header: %s", part.c_str());
           return false;
         }
