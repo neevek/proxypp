@@ -7,6 +7,7 @@
 #ifndef AUTO_PROXY_RULE_H_
 #define AUTO_PROXY_RULE_H_
 #include <string>
+#include <functional>
 
 namespace proxypp {
   class AutoProxyRule {

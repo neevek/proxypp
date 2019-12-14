@@ -7,7 +7,6 @@
 #include "auto_proxy_manager.h"
 #include <regex>
 #include <algorithm>
-#include <functional>
 #include <fstream>
 #include "nul/log.hpp"
 
@@ -68,7 +67,7 @@ namespace proxypp {
   bool AutoProxyManager::matches(const std::string &host, uint16_t port) {
     auto size = matchRules_.size();
     auto &rules = matchRules_;
-    for (int i = 0; i < size; ++i) {
+    for (std::size_t i = 0; i < size; ++i) {
       auto &rule = rules[i];
       if (rule.matches(host, port)) {
         if (i > SORT_RULES_THRESHOLD) {
@@ -188,7 +187,7 @@ namespace proxypp {
         prefixOffset >= prefix.size()) {
       return false;
     }
-    for (int i = 0, j = prefixOffset; j < prefix.size(); ++i, ++j) {
+    for (std::size_t i = 0, j = prefixOffset; j < prefix.size(); ++i, ++j) {
       if (s[i] != prefix[j]) {
         return false;
       }
