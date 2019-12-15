@@ -8,34 +8,31 @@
 #include "nul/log.hpp"
 #include "nul/util.hpp"
 #include "nul/uri.hpp"
+#include "proxypp/util.h"
+
 #include <algorithm>
 
 namespace proxypp {
   using su = nul::StringUtil;
 
-  bool HttpHeaderParser::parse(const char *buf, std::size_t len) {
-    if (len < 10) {
+  bool HttpHeaderParser::parse(
+    const std::string &data, std::string::size_type headerEndPos) {
+    if (data.size() < 10) {
       LOG_E("Invalid http header");
       return false;
     }
 
-    requestData_.assign(buf, len);
     std::string header;
-    if ((buf[len - 4] != '\r') ||
-        (buf[len - 3] != '\n') ||
-        (buf[len - 2] != '\r') ||
-        (buf[len - 1] != '\n')) {
-      auto pos = requestData_.find("\r\n\r\n");
-      if (pos == std::string::npos) {
-        const_cast<char *>(buf)[len - 1] = '\0';
-        LOG_E("Invalid http header: %s", buf);
-        return false;
-      }
-      header = requestData_.substr(0, pos);
-
-    } else {
-      header = requestData_;
+    if (headerEndPos == std::string::npos) {
+      headerEndPos = findHeaderEndPos(data);
     }
+    if (headerEndPos == std::string::npos) {
+      const_cast<char *>(data.data())[data.size() - 1] = '\0';
+      LOG_E("Invalid http header: %s", data.c_str());
+      return false;
+    }
+
+    header = data.substr(0, headerEndPos);
 
     return su::split(header, "\r\n", [this](auto index, const auto &part) {
       if (index == 0) {
@@ -91,25 +88,56 @@ namespace proxypp {
         port = std::stoi(host.substr(addrPortSepIndex + 1).c_str());
         addr = host.substr(0, addrPortSepIndex);
       }
+      return true;
 
-    } else if (url_.empty()) {
-      LOG_E("URL is empty");
-      return false;
+    } else if (!url_.empty()) {
+      nul::URI uri;
+      uri.parse(url_);
+      addr = uri.getHost();
+      port = uri.getPort() != 0 ? uri.getPort() : 80;
+      return true;
     }
 
-    nul::URI uri;
-    uri.parse(url_);
-    addr = uri.getHost();
-    port = uri.getPort() != 0 ? uri.getPort() : 80;
-    return true;
-  }
-
-  std::string HttpHeaderParser::getRequestData() const {
-    return requestData_;
+    LOG_E("URL is empty");
+    return false;
   }
 
   bool HttpHeaderParser::isConnectMethod() const {
     return "CONNECT" == method_;
+  }
+
+  std::string::size_type HttpHeaderParser::findHeaderEndPos(
+    const std::string &data) {
+    auto size = data.size();
+    if (size < 4) {
+      return std::string::npos;
+    }
+
+    if ((data[size - 4] == '\r') &&
+        (data[size - 3] == '\n') &&
+        (data[size - 2] == '\r') &&
+        (data[size - 1] == '\n')) {
+      return size - 4;
+    }
+    return data.find("\r\n\r\n");
+  }
+
+  bool HttpHeaderParser::startsWithValidHttpMethod(
+    const std::string &data) {
+    if (data.size() < 7) {
+      // no enough data, assume that it starts with valid http method
+      return true;
+    }
+
+    return
+      Util::strStartsWith(data, "CONNECT", 0) ||
+      Util::strStartsWith(data, "GET", 0) ||
+      Util::strStartsWith(data, "HEAD", 0) ||
+      Util::strStartsWith(data, "POST", 0) ||
+      Util::strStartsWith(data, "PUT", 0) ||
+      Util::strStartsWith(data, "DELETE", 0) ||
+      Util::strStartsWith(data, "OPTIONS", 0) ||
+      Util::strStartsWith(data, "PATCH", 0);
   }
 
 } /* end of namspace: proxypp */

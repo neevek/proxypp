@@ -23,10 +23,6 @@ namespace proxypp {
     private:
       static AutoProxyRule::MatchFun parse(const std::string &rule);
       static AutoProxyRule::MatchFun parseExceptionRule(const std::string &rule);
-      static bool strStartsWith(
-        const std::string &rule,
-        const std::string &prefix,
-        std::size_t prefixOffset);
 
       static bool removeRuleFrom(
         std::vector<AutoProxyRule> &vec, const std::string &rule);

@@ -52,6 +52,7 @@ namespace proxypp {
       uvcpp::EvDNSResult::DNSResultVector ipAddrs_;
       decltype(ipAddrs_.begin()) ipIt_{ipAddrs_.end()};
       bool upstreamConnected_{false};
+      bool hasReadHeader_{false};
 
       std::shared_ptr<nul::BufferPool> bufferPool_;
 
@@ -61,7 +62,7 @@ namespace proxypp {
       UpstreamType upstreamType_{UpstreamType::kUnknown};
       std::string upstreamServerHost_;
       uint16_t upstreamServerPort_{0};
-      std::shared_ptr<AutoProxyManager> proxyRuleManager_{nullptr};
+      std::shared_ptr<AutoProxyManager> proxyRuleManager_;
   };
 } /* end of namspace: proxypp */
 

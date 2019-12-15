@@ -12,13 +12,14 @@
 namespace proxypp {
   class HttpHeaderParser final {
     public:
-      bool parse(const char *buf, std::size_t len);
+      bool parse(const std::string &data, std::string::size_type headerEndPos);
       bool getAddrAndPort(std::string &addr, uint16_t &port) const;
-      std::string getRequestData() const;
       bool isConnectMethod() const;
+
+      static std::string::size_type findHeaderEndPos(const std::string &data);
+      static bool startsWithValidHttpMethod(const std::string &data);
     
     private:
-      std::string requestData_;
       std::string method_;
       std::string url_;
       std::string httpVersion_;

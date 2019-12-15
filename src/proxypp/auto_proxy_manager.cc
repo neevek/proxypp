@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <fstream>
 #include "nul/log.hpp"
+#include "util.h"
 
 namespace {
   constexpr int SORT_RULES_THRESHOLD = 3;
@@ -109,26 +110,26 @@ namespace proxypp {
     }
 
     // matches against the entire rule
-    if (strStartsWith(rule, "|https://", 0)) {
+    if (Util::strStartsWith(rule, "|https://", 0)) {
       return [] (
         const std::string &rule, const std::string &host, uint16_t port) {
-        return port == 443 && strStartsWith(host, rule, 9);
+        return port == 443 && Util::strStartsWith(host, rule, 9);
       };
     }
 
-    if (strStartsWith(rule, "|http://", 0)) {
+    if (Util::strStartsWith(rule, "|http://", 0)) {
       return [] (
         const std::string &rule, const std::string &host, uint16_t port) {
-        return port != 443 && strStartsWith(host, rule, 8);
+        return port != 443 && Util::strStartsWith(host, rule, 8);
       };
     }
 
     // matches against domain
     std::string ruleStartsWithDot;
-    if (strStartsWith(rule, "||.", 0)) {
+    if (Util::strStartsWith(rule, "||.", 0)) {
       ruleStartsWithDot = rule.substr(2);
 
-    } else if (strStartsWith(rule, "||", 0)) {
+    } else if (Util::strStartsWith(rule, "||", 0)) {
       ruleStartsWithDot = "." + rule.substr(2);
 
     } else if (rule[0] != '.') {
@@ -141,27 +142,27 @@ namespace proxypp {
     return [ruleStartsWithDot] (
       const std::string &, const std::string &host, uint16_t port) {
       return host.find(ruleStartsWithDot) != std::string::npos ||
-        (strStartsWith(host, ruleStartsWithDot, 1));
+        (Util::strStartsWith(host, ruleStartsWithDot, 1));
     };
   }
 
   AutoProxyRule::MatchFun AutoProxyManager::parseExceptionRule(
     const std::string &rule) {
-    if (strStartsWith(rule, "@@|https://", 0)) {
+    if (Util::strStartsWith(rule, "@@|https://", 0)) {
       return [] (
         const std::string &rule, const std::string &host, uint16_t port) {
-        return port == 443 && strStartsWith(host, rule, 11);
+        return port == 443 && Util::strStartsWith(host, rule, 11);
       };
     }
 
-    if (strStartsWith(rule, "@@|http://", 0)) {
+    if (Util::strStartsWith(rule, "@@|http://", 0)) {
       return [] (
         const std::string &rule, const std::string &host, uint16_t port) {
-        return port != 443 && strStartsWith(host, rule, 10);
+        return port != 443 && Util::strStartsWith(host, rule, 10);
       };
     }
 
-    if (strStartsWith(rule, "@@||", 0)) {
+    if (Util::strStartsWith(rule, "@@||", 0)) {
       std::string ruleStartsWithDot;
       if (rule[0] != '.') {
         ruleStartsWithDot = "." + rule.substr(4);
@@ -172,27 +173,11 @@ namespace proxypp {
       return [ruleStartsWithDot] (
         const std::string &, const std::string &host, uint16_t port) {
         return host.find(ruleStartsWithDot) != std::string::npos ||
-          (strStartsWith(host, ruleStartsWithDot, 1));
+          (Util::strStartsWith(host, ruleStartsWithDot, 1));
       };
     }
 
     return nullptr;
-  }
-
-  bool AutoProxyManager::strStartsWith(
-    const std::string &s,
-    const std::string &prefix,
-    std::size_t prefixOffset) {
-    if (s.size() < (prefix.size() - prefixOffset) ||
-        prefixOffset >= prefix.size()) {
-      return false;
-    }
-    for (std::size_t i = 0, j = prefixOffset; j < prefix.size(); ++i, ++j) {
-      if (s[i] != prefix[j]) {
-        return false;
-      }
-    }
-    return true;
   }
 
   bool AutoProxyManager::removeRuleFrom(

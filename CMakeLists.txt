@@ -19,7 +19,7 @@ if(NOT BUILD_RELEASE)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLOG_VERBOSE -g")
 else()
   message("Building for release")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLOG_ERROR -Os")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLOG_DEBUG -Os")
 endif()
 
 find_package(Threads REQUIRED)
@@ -78,6 +78,7 @@ set(HPD_SRCS
   src/proxypp/http/http_proxy_session.cc
   src/proxypp/http/http_proxy_server.cc
   src/proxypp/auto_proxy_manager.cc
+  src/proxypp/util.cc
   )
 
 if(BUILD_SHARED_LIBRARY)

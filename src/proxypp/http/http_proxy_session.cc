@@ -14,11 +14,11 @@
 
 namespace {
   static const auto REPLY_BAD_REQUEST =
-    std::string{"HTTP/1.1 400 Bad Request\r\n\r\n"};
+    std::string{"HTTP/1.1 400 Bad Request\r\nServer: hpd\r\n\r\n"};
   static const auto REPLY_BAD_GATEWAY =
-    std::string{"HTTP/1.1 502 Bad Gateway\r\n\r\n"};
+    std::string{"HTTP/1.1 502 Bad Gateway\r\nServer: hpd\r\n\r\n"};
   static const auto REPLY_OK_FOR_CONNECT_REQUEST =
-    std::string{"HTTP/1.1 200 OK\r\n\r\n"};
+    std::string{"HTTP/1.1 200 OK\r\nServer: hpd\r\n\r\n"};
   static const auto HTTP_HEADER_PROXY_CONNECTION =
     std::string{"Proxy-Connection"};
 }
@@ -58,50 +58,80 @@ namespace proxypp {
           upstreamConn_->writeAsync(
             bufferPool_->assembleDataBuffer(e.buf, e.nread));
 
-        } else {
+        } else if (socksClient_) {
           socksClient_->writeAsync(
             bufferPool_->assembleDataBuffer(e.buf, e.nread));
+
+        } else {
+          // not possible to reach here
+          abort();
         }
         return;
       }
 
+      requestData_.append(e.buf, e.nread);
+      if (hasReadHeader_) {
+        LOG_W("has already read enough data for header");
+        return;
+      }
+
+      auto pos = HttpHeaderParser::findHeaderEndPos(requestData_);
+      if (pos == std::string::npos) {
+        if (!HttpHeaderParser::startsWithValidHttpMethod(requestData_)) {
+          LOG_E("request does not starts with valid http method");
+          this->replyDownstream(REPLY_BAD_REQUEST);
+          conn.close();
+          return;
+        }
+
+        LOG_D("expecting more data for the header: %zu", requestData_.size());
+        return;
+      }
+
+      hasReadHeader_ = true;
       HttpHeaderParser parser;
       std::string addr;
       uint16_t port;
 
-      if (!parser.parse(e.buf, e.nread) || !parser.getAddrAndPort(addr, port)) {
+      if (!parser.parse(requestData_, pos) ||
+          !parser.getAddrAndPort(addr, port)) {
         this->replyDownstream(REPLY_BAD_REQUEST);
         conn.close();
+        return;
+      }
 
-      } else {
-        if (!parser.isConnectMethod()) {
-          requestData_ = parser.getRequestData();
-        }
+      // not sure if we need the request data at this point,
+      // so save as a temp variable here
+      auto tempRequestData = std::move(requestData_);
+      if (!parser.isConnectMethod()) {
+        std::swap(requestData_, tempRequestData);
+      }
 
-        if (upstreamType_ != UpstreamType::kUnknown &&
-            (!proxyRuleManager_ || proxyRuleManager_->matches(addr, port))) {
+      if (upstreamType_ != UpstreamType::kUnknown &&
+          (!proxyRuleManager_ || proxyRuleManager_->matches(addr, port))) {
 
-          if (upstreamType_ == UpstreamType::kSOCKS5) {
-            this->initiateSocksConnection(addr, port);
+        if (upstreamType_ == UpstreamType::kSOCKS5) {
+          this->initiateSocksConnection(addr, port);
 
-          } else if (upstreamType_ == UpstreamType::kHTTP) {
-            // redirect all the request data to the remote HTTP proxy server
-            // regardless of whether it is a CONNECT request
-            requestData_ = parser.getRequestData();
-            this->connectUpstreamWithAddr(
-              upstreamServerHost_, upstreamServerPort_);
-
-          } else {
-            // DIRECT connect if no proxy server is available
-            // Should not reach here!
-            this->connectUpstreamWithAddr(addr, port);
+        } else if (upstreamType_ == UpstreamType::kHTTP) {
+          // redirect all the request data to the remote HTTP proxy server
+          // regardless of whether it is a CONNECT request
+          if (!tempRequestData.empty()) {
+            std::swap(requestData_, tempRequestData);
           }
+          this->connectUpstreamWithAddr(
+            upstreamServerHost_, upstreamServerPort_);
 
         } else {
+          // DIRECT connect if no proxy server is available
+          // Should not reach here!
           this->connectUpstreamWithAddr(addr, port);
         }
+
+      } else {
+        this->connectUpstreamWithAddr(addr, port);
       }
-    });
+      });
 
     downstreamConn_->readStart();
   }

@@ -117,7 +117,6 @@ namespace proxypp {
           this->removeSession(sessionId);
         });
 
-        //auto client = std::make_shared<ProxySession>(std::move(conn), bufferPool_);
         auto client = createSession_(std::move(conn), bufferPool_);
         sessions_[sessionId] = client;
         client->start();
@@ -128,7 +127,6 @@ namespace proxypp {
       void removeSession(SessionId sessionId) {
         auto clientIt = sessions_.find(sessionId);
         if (clientIt != sessions_.end()) {
-          auto client = std::move(clientIt->second);
           sessions_.erase(clientIt);
         }
       }
