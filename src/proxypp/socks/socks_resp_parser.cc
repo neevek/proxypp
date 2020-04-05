@@ -5,7 +5,7 @@
 **   Description: see the header file 
 *******************************************************************************/
 #include "proxypp/socks/socks_resp_parser.h"
-#include "nul/log.hpp"
+#include "nul/log.h"
 #include "uvcpp.h"
 
 namespace proxypp {

@@ -5,7 +5,7 @@
 **   Description: see the header file 
 *******************************************************************************/
 #include "proxypp/socks/socks_req_parser.h"
-#include "nul/log.hpp"
+#include "nul/log.h"
 
 namespace {
   #define SOCKS_ERROR(replyField, fmt, ...) \

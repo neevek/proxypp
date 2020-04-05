@@ -5,7 +5,7 @@
 **   Description: see the header file 
 *******************************************************************************/
 #include "proxypp/socks/socks_proxy_session.h"
-#include "nul/log.hpp"
+#include "nul/log.h"
 
 #include <algorithm>
 #include <cstring>

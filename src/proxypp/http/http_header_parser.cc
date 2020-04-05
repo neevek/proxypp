@@ -5,7 +5,7 @@
 **   Description: see the header file 
 *******************************************************************************/
 #include "proxypp/http/http_header_parser.h"
-#include "nul/log.hpp"
+#include "nul/log.h"
 #include "nul/util.hpp"
 #include "nul/uri.hpp"
 #include "proxypp/util.h"

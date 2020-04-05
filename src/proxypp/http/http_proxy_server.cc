@@ -158,7 +158,7 @@ namespace proxypp {
 
 } /* end of namspace: proxypp */
 
-#ifdef BUILD_CLIENT 
+//#ifdef BUILD_CLIENT 
 #include "proxypp/cli/cmdline.h"
 
 int main(int argc, char *argv[]) {
@@ -195,4 +195,4 @@ int main(int argc, char *argv[]) {
     p.get<int>("backlog"));
   return 0;
 }
-#endif
+//#endif

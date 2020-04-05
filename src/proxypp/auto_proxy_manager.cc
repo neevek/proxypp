@@ -8,7 +8,7 @@
 #include <regex>
 #include <algorithm>
 #include <fstream>
-#include "nul/log.hpp"
+#include "nul/log.h"
 #include "util.h"
 
 namespace {
