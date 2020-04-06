@@ -69,6 +69,8 @@ namespace proxypp {
   }
 
   bool HttpHeaderParser::getAddrAndPort(std::string &addr, uint16_t &port) const {
+    port = 0;
+
     auto hostIt = headers_.find("host");
     if (hostIt != headers_.end()) {
       auto &host = hostIt->second;
@@ -81,20 +83,29 @@ namespace proxypp {
       if (addrPortSepIndex == std::string::npos ||
           // two colons, treat it as IPv6 with default port number
           (host[addrPortSepIndex - 1] == ':')) {
-        port = 80;
         addr = host;
 
       } else {
         port = std::stoi(host.substr(addrPortSepIndex + 1).c_str());
         addr = host.substr(0, addrPortSepIndex);
       }
-      return true;
+    }
 
-    } else if (!url_.empty()) {
+    if (port == 0 && !url_.empty()) {
       nul::URI uri;
       uri.parse(url_);
       addr = uri.getHost();
-      port = uri.getPort() != 0 ? uri.getPort() : 80;
+      port = uri.getPort();
+    }
+
+    if (!addr.empty()) {
+      if (port == 0) {
+        if (url_.find("https") == 0) {
+          port = 443;
+        } else {
+          port = 80;
+        }
+      }
       return true;
     }
 

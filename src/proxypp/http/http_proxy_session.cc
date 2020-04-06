@@ -168,7 +168,7 @@ namespace proxypp {
           return;
         }
 
-        LOG_V("Connected to SOCKS server for target: %s:%d",
+        LOG_D("Connected to SOCKS server for target: %s:%d",
               targetServerAddr.c_str(), targetServerPort);
         this->onUpstreamConnected(conn);
 
@@ -262,7 +262,7 @@ namespace proxypp {
     });
     upstreamConn_->once<uvcpp::EvConnect>(
       [this](const auto &e, auto &conn) {
-        LOG_V("Connected to: %s:%d", conn.getIP().c_str(), conn.getPort());
+        LOG_D("Connected to: %s:%d", conn.getIP().c_str(), conn.getPort());
         this->onUpstreamConnected(*upstreamConn_);
 
         conn.template on<uvcpp::EvBufferRecycled>([this](const auto &e, auto &conn) {
