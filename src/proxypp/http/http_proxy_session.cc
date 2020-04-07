@@ -17,10 +17,13 @@ namespace {
     std::string{"HTTP/1.1 400 Bad Request\r\nServer: hpd\r\n\r\n"};
   static const auto REPLY_BAD_GATEWAY =
     std::string{"HTTP/1.1 502 Bad Gateway\r\nServer: hpd\r\n\r\n"};
+  static const auto REPLY_PAYLOAD_TOO_LARGE =
+    std::string{"HTTP/1.1 413 Payload Too Large\r\nServer: hpd\r\n\r\n"};
   static const auto REPLY_OK_FOR_CONNECT_REQUEST =
     std::string{"HTTP/1.1 200 OK\r\nServer: hpd\r\n\r\n"};
   static const auto HTTP_HEADER_PROXY_CONNECTION =
     std::string{"Proxy-Connection"};
+  static const auto MAX_PENDING_REQUEST_BYTES = 1024 * 1024U;
 }
 
 namespace proxypp {
@@ -71,7 +74,13 @@ namespace proxypp {
 
       requestData_.append(e.buf, e.nread);
       if (hasReadHeader_) {
-        LOG_W("has already read enough data for header");
+        if (requestData_.size() > MAX_PENDING_REQUEST_BYTES) {
+          this->replyDownstream(REPLY_PAYLOAD_TOO_LARGE);
+          conn.close();
+          LOG_E("pending request data too large, will close the connection");
+        } else {
+          LOG_W("accumulated %zu bytes of request data", requestData_.size());
+        }
         return;
       }
 

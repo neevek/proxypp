@@ -74,17 +74,18 @@ namespace proxypp {
     auto hostIt = headers_.find("host");
     if (hostIt != headers_.end()) {
       auto &host = hostIt->second;
-      auto addrPortSepIndex = host.rfind(":");
+      auto ipv6EndBracket = host.rfind(']');
+      auto addrPortSepIndex =
+        (ipv6EndBracket == std::string::npos) ? // no bracket, so it's not ipv6
+          host.rfind(':') : host.find(':', ipv6EndBracket + 1);
+
       if (addrPortSepIndex == 0 || addrPortSepIndex == host.length() - 1) {
         LOG_W("Invalid Host header: %s", host.c_str());
         return false;
       }
 
-      if (addrPortSepIndex == std::string::npos ||
-          // two colons, treat it as IPv6 with default port number
-          (host[addrPortSepIndex - 1] == ':')) {
+      if (addrPortSepIndex == std::string::npos) {
         addr = host;
-
       } else {
         port = std::stoi(host.substr(addrPortSepIndex + 1).c_str());
         addr = host.substr(0, addrPortSepIndex);
