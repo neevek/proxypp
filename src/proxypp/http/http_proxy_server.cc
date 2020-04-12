@@ -21,25 +21,30 @@ namespace {
     uint16_t upstreamServerPort;
     bool proxyRuleMode;
     std::shared_ptr<proxypp::AutoProxyManager> autoProxyManager{nullptr};
+
+    std::shared_ptr<uvcpp::Loop> loop;
+    std::shared_ptr<uvcpp::FsEvent> proxyRuleFileChangeNotifier;
+
+    std::chrono::system_clock::time_point lastUpdateProxyRuleTs;
   };
 }
 
 namespace proxypp {
   HttpProxyServer::HttpProxyServer() : ctx_(new HttpProxyServerContext()) {
-  }
-
-  HttpProxyServer::~HttpProxyServer() {
-    delete reinterpret_cast<HttpProxyServerContext *>(ctx_);
-  }
-
-  bool HttpProxyServer::start(const std::string &addr, uint16_t port, int backlog) {
     auto loop = std::make_shared<uvcpp::Loop>();
     if (!loop->init()) {
       LOG_E("Failed to start event loop");
-      return false;
+      abort();
     }
+    static_cast<HttpProxyServerContext *>(ctx_)->loop = loop;
+  }
 
-    auto ctx = reinterpret_cast<HttpProxyServerContext *>(ctx_);
+  HttpProxyServer::~HttpProxyServer() {
+    delete static_cast<HttpProxyServerContext *>(ctx_);
+  }
+
+  bool HttpProxyServer::start(const std::string &addr, uint16_t port, int backlog) {
+    auto ctx = static_cast<HttpProxyServerContext *>(ctx_);
     ctx->server.setSessionCreator(
       [ctx](const std::shared_ptr<uvcpp::Tcp> &conn,
          const std::shared_ptr<nul::BufferPool> &bufferPool) {
@@ -51,28 +56,40 @@ namespace proxypp {
         return sess;
       });
 
-    if (!ctx->server.start(loop, addr, port, backlog)) {
+    if (!ctx->server.start(ctx->loop, addr, port, backlog)) {
       LOG_E("Failed to start start HttpProxyServerContext");
       return false;
     }
-    loop->run();
+    ctx->loop->run();
     return true;
   }
 
   void HttpProxyServer::shutdown() {
-    if (ctx_) {
-      reinterpret_cast<HttpProxyServerContext *>(ctx_)->server.shutdown();
+    if (!ctx_) {
+      return;
+    }
+    auto ctx = static_cast<HttpProxyServerContext *>(ctx_);
+    ctx->server.shutdown();
+
+    if (ctx->proxyRuleFileChangeNotifier) {
+      auto work = uvcpp::Work::create(ctx->loop);
+      work->once<uvcpp::EvAfterWork>(
+        [ctx, _ = work](const auto &e, auto &work) {
+          ctx->proxyRuleFileChangeNotifier->stop();
+          ctx->proxyRuleFileChangeNotifier->close();
+        });
+      work->start();
     }
   }
 
   bool HttpProxyServer::isRunning() {
     return ctx_ &&
-      reinterpret_cast<HttpProxyServerContext *>(ctx_)->server.isRunning();
+      static_cast<HttpProxyServerContext *>(ctx_)->server.isRunning();
   }
 
   void HttpProxyServer::setEventCallback(EventCallback &&callback) {
     if (ctx_) {
-      reinterpret_cast<HttpProxyServerContext *>(ctx_)->server.
+      static_cast<HttpProxyServerContext *>(ctx_)->server.
         setEventCallback([callback](auto status, auto &message){
         callback(static_cast<ServerStatus>(status), message);
       });
@@ -84,7 +101,7 @@ namespace proxypp {
       return;
     }
 
-    auto ctx = reinterpret_cast<HttpProxyServerContext *>(ctx_);
+    auto ctx = static_cast<HttpProxyServerContext *>(ctx_);
     nul::URI uri;
     if (!uri.parse(uriStr)) {
       LOG_W("Invalid upstream server ignored: %s", uriStr.c_str());
@@ -121,11 +138,54 @@ namespace proxypp {
           ctx->upstreamServerHost.c_str(), ctx->upstreamServerPort);
   }
 
-  std::size_t HttpProxyServer::addAutoProxyRulesFile(
+  std::size_t HttpProxyServer::setAutoProxyRulesFile(
     const std::string &proxyRulesFile) {
     assert(ctx_);
+    auto size = addAutoProxyRulesFile(proxyRulesFile);
 
-    auto ctx = reinterpret_cast<HttpProxyServerContext *>(ctx_);
+    auto ctx = static_cast<HttpProxyServerContext *>(ctx_);
+    if (size > 0 && !ctx->proxyRuleFileChangeNotifier) {
+      LOG_I("will watch proxy rule file: %s", proxyRulesFile.c_str());
+
+      ctx->proxyRuleFileChangeNotifier = uvcpp::FsEvent::create(ctx->loop);
+      ctx->proxyRuleFileChangeNotifier->on<uvcpp::EvFsEvent>(
+        [this, ctx, proxyRulesFile](const auto &e, auto &fsEvent){
+          if (e.events == uvcpp::EvFsEvent::Event::kChange &&
+              e.path == proxyRulesFile) {
+
+            auto now = std::chrono::system_clock::now();
+            auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(
+              now - ctx->lastUpdateProxyRuleTs).count();
+            if (elapsed < 2) {
+              return;
+            }
+
+            LOG_I("proxy rule file changed, will reload proxy rules from: %s",
+                  proxyRulesFile.c_str());
+
+            clearProxyRules();
+            auto updatedSize = addAutoProxyRulesFile(proxyRulesFile);
+            ctx->lastUpdateProxyRuleTs = std::chrono::system_clock::now();
+
+            LOG_I("rules updated: %zu", updatedSize);
+          }
+      });
+      ctx->proxyRuleFileChangeNotifier->start(
+        proxyRulesFile, uvcpp::FsEvent::Flag::kWatchEntry);
+    }
+
+    return size;
+  }
+
+  std::size_t HttpProxyServer::addAutoProxyRulesFile(
+    const std::string &proxyRulesFile) {
+    if (proxyRulesFile.empty()) {
+      return 0;
+    }
+
+    assert(ctx_);
+
+    auto ctx = static_cast<HttpProxyServerContext *>(ctx_);
     if (!ctx->autoProxyManager) {
       ctx->autoProxyManager = std::make_shared<proxypp::AutoProxyManager>();
     }
@@ -135,7 +195,7 @@ namespace proxypp {
   bool HttpProxyServer::addProxyRule(const std::string &rule) {
     assert(ctx_);
 
-    auto ctx = reinterpret_cast<HttpProxyServerContext *>(ctx_);
+    auto ctx = static_cast<HttpProxyServerContext *>(ctx_);
     if (!ctx->autoProxyManager) {
       ctx->autoProxyManager = std::make_shared<proxypp::AutoProxyManager>();
     }
@@ -144,13 +204,13 @@ namespace proxypp {
 
   bool HttpProxyServer::removeProxyRule(const std::string &rule) {
     assert(ctx_);
-    auto ctx = reinterpret_cast<HttpProxyServerContext *>(ctx_);
+    auto ctx = static_cast<HttpProxyServerContext *>(ctx_);
     return ctx->autoProxyManager && ctx->autoProxyManager->removeRule(rule);
   }
 
   void HttpProxyServer::clearProxyRules() {
     assert(ctx_);
-    auto ctx = reinterpret_cast<HttpProxyServerContext *>(ctx_);
+    auto ctx = static_cast<HttpProxyServerContext *>(ctx_);
     if (ctx->autoProxyManager) {
       ctx->autoProxyManager->clearAll();
     }
@@ -184,7 +244,7 @@ int main(int argc, char *argv[]) {
 
   auto proxyRulesFile = p.get<std::string>("proxy_rules_file");
   if (!proxyRulesFile.empty()) {
-    d.addAutoProxyRulesFile(proxyRulesFile);
+    d.setAutoProxyRulesFile(proxyRulesFile);
   }
 
   signal(SIGPIPE, [](int){ /* ignore sigpipe */ });
