@@ -58,7 +58,7 @@ namespace proxypp {
               ServerStatus::ERROR_OCCURRED, std::string{uv_strerror(e.status)});
           }
         });
-        server_->on<uvcpp::EvClose>([this, addr, port](const auto &e, auto &s) {
+        server_->once<uvcpp::EvClose>([this, addr, port](const auto &e, auto &s) {
           LOG_I("ProxyServer [%s:%d] closed", addr.c_str(), port);
           if (this->eventCallback_) {
             this->eventCallback_(ServerStatus::SHUTDOWN, "ProxyServer shutdown");
@@ -113,7 +113,7 @@ namespace proxypp {
     private:
       void onClientConnected(const std::shared_ptr<uvcpp::Tcp> &&conn) {
         auto sessionId = getNextSessionId();
-        conn->on<uvcpp::EvClose>([this, sessionId](const auto &e, auto &conn) {
+        conn->once<uvcpp::EvClose>([this, sessionId](const auto &e, auto &conn) {
           this->removeSession(sessionId);
         });
 
